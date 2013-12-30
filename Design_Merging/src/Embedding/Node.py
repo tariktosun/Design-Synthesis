@@ -14,6 +14,8 @@ class Node(object):
         '''
         Constructor
         '''
+        # Name:
+        self.name = ''
         # List of pointers to child nodes
         self.children = []
         # Edge linking this node to its parent
@@ -54,4 +56,18 @@ class Node(object):
             # Note: edge is now orphaned.
         else:
             raise Exception('Child removal failed.  Node was not child\'s parent.')
-        
+    
+    def __repr__(self):
+        params = {}
+        params['name'] = self.name
+        params['children'] = str([c.name for c in self.children])
+        if self.parent:
+            params['parent_name'] = str(self.parent.name)
+        else:
+            params['parent_name'] = 'None'
+        params['type'] = str(self.type)
+        return 'Node %s:\n children: %s\n parent: %s\n type: %s' % (params['name'],
+                                                                params['children'],
+                                                                params['parent_name'],
+                                                                params['type'],
+                                                                )
