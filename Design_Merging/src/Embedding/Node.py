@@ -10,12 +10,12 @@ class Node(object):
     Node class for design merging
     '''
 
-    def __init__(self):
+    def __init__(self, name=''):
         '''
         Constructor
         '''
         # Name:
-        self.name = ''
+        self.name = name
         # List of pointers to child nodes
         self.children = []
         # Edge linking this node to its parent
@@ -31,7 +31,7 @@ class Node(object):
         '''
         pass
     
-    def add_child(self, child, length):
+    def add_child(self, child, length=0):
         '''
         Builds an edge of specified length from child to this node, making it a
         child of this node.
