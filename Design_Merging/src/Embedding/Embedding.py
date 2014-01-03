@@ -6,6 +6,7 @@ Created on Dec 30, 2013
 
 import Design
 from itertools import permutations
+import numpy as np
 
 class Embedding(object):
     '''
@@ -24,7 +25,48 @@ class Embedding(object):
         
         self.A = superD
         self.B = subD
+        
+        # Initialize table for dynamic programming.
+        self.T = { superN:{ subN:None for subN in self.B.nodes } 
+                  for superN in self.A.nodes }
+        
         self.nodemap = nodemap
+        
+    def check_topological_embedding_dynamic(self):
+        '''
+        Check topological embedding using dynamic programming algorithm.
+        '''
+        return self._embeds(self.A.root_node, self.B.root_node)
+        
+    def _embeds(self, superN, subN):
+        '''
+        Recursive function testing subtree embedding.
+        '''
+        # Recursively ensure that all child pairings have table entries:
+        for superC in superN.children:
+            for subC in subN.children:
+                if self.T[superC][subC] == None:
+                    self.T[superC][subC] = self._embeds(superC, subC)
+                    #print superC.name + ', ' + subC.name
+        
+        # < Add a functionality check here >
+        # < Add end effector check here >
+        # check child matching using brute force enumeration:
+        if len(superN.children)<len(subN.children):
+            return False
+        for sub_children_perm in permutations(subN.children):
+            for super_children_perm in permutations(superN.children, len(subN.children)):
+                # NOTE: all( [] ) evaluates to True.
+                if all( self.T[z[0]][z[1]]==True for z in zip(super_children_perm, sub_children_perm) ):
+                    # We have found an embedding. Propagate upwards.
+                    p = superN.parent
+                    while p is not None:
+                        self.T[p][subN] = True
+                        p = p.parent
+                    #print [foo.values() for foo in self.T.values()]
+                    return True
+        return False
+        
               
     def check_topological_embedding_brute(self):
         '''

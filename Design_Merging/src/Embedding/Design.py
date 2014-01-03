@@ -25,6 +25,7 @@ class Design(object):
         self.nodes = nodes
         # for now, the design just gets its edges from the nodes.
         self.edges = edges
+        self.root_node = root_node
         
     def parse_tree(self, root_node, nodes, edges):
         '''

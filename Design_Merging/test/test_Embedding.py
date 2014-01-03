@@ -62,23 +62,45 @@ class Test_Embedding(unittest.TestCase):
     def tearDown(self):
         pass
     
-    def test_topological_embedding_brute(self):
+    def test_topological_embedding_dynamic(self):
         # pass set:
         AB_embedding = Embedding.Embedding(self.A, self.B)
         CB_embedding = Embedding.Embedding(self.C, self.B)
-        pass_set = [AB_embedding, CB_embedding]
+        pass_set = [AB_embedding]
 
         # fail set:
         BA_embedding = Embedding.Embedding(self.B, self.A)
         BC_embedding = Embedding.Embedding(self.B, self.C)
-        fail_set = [ BA_embedding, BC_embedding ]
+        fail_set = [ BA_embedding, BC_embedding , CB_embedding ]
+
+        
+        for i, embedding in enumerate(pass_set):
+            assert embedding.check_topological_embedding_dynamic(), 'Pass set ' + str(i)
+            print 'Passed' + str(i)
+            
+        for i, embedding in enumerate(fail_set):
+            assert not embedding.check_topological_embedding_dynamic(), 'Fail set ' + str(i)
+    
+    def test_topological_embedding_brute(self):
+        # pass set:
+        AB_embedding = Embedding.Embedding(self.A, self.B)
+        CB_embedding = Embedding.Embedding(self.C, self.B)
+        pass_set = [AB_embedding]
+
+        # fail set:
+        BA_embedding = Embedding.Embedding(self.B, self.A)
+        BC_embedding = Embedding.Embedding(self.B, self.C)
+        fail_set = [ BA_embedding, BC_embedding, CB_embedding ]
 
         
         for i, embedding in enumerate(pass_set):
             assert embedding.check_topological_embedding_brute(), 'Pass set ' + str(i)
             
         for i, embedding in enumerate(fail_set):
-            assert not embedding.check_topological_embedding_brute(), 'Fail set ' + str(i)
+            foo =  embedding.check_topological_embedding_brute()
+            if foo:
+                bar = 5
+            assert not foo, 'Fail set ' + str(i)
         
 
     def test_vertex2vertex(self):
