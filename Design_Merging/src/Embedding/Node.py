@@ -3,7 +3,8 @@ Created on Dec 28, 2013
 
 @author: tariktosun
 '''
-from Embedding.Edge import Edge
+#from Embedding.Edge import Edge
+from Edge import Edge
 
 class Node(object):
     '''

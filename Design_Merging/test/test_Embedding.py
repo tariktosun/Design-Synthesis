@@ -5,104 +5,137 @@ Created on Dec 29, 2013
 '''
 import unittest
 import Embedding.Node as Node
-import Embedding.Edge as Edge
+#import Embedding.Edge as Edge
 import Embedding.Design as Design
-import Embedding.Embedding as Embedding
+from Embedding import Embedding
 
 class Test_Embedding(unittest.TestCase):
     
     
     def setUp(self):
         ''' define fixtures for tests. '''
-        sub = [0]*4
-        sup = [0]*6
-        for i in xrange(len(sub)):
-            sub[i] = Node.Node(str(i))
-        for i in xrange(len(sup)):
-            sup[i] = Node.Node(str(i))
+        b = [0]*4
+        a = [0]*6
+        c = [0]*5
+        for i in xrange(len(b)):
+            b[i] = Node.Node(str(i))
+        for i in xrange(len(a)):
+            a[i] = Node.Node(str(i))
+        for i in xrange(len(c)):
+            c[i] = Node.Node(str(i))
         # build structure:
-        sub[3].add_child(sub[2])
-        sub[2].add_child(sub[1])
-        sub[2].add_child(sub[0])
-        
-        sup[5].add_child(sup[4])
-        sup[4].add_child(sup[3])
-        sup[4].add_child(sup[2])
-        sup[3].add_child(sup[1])
-        sup[2].add_child(sup[0])
+        # subdesign:
+        b[3].add_child(b[2])
+        b[2].add_child(b[1])
+        b[2].add_child(b[0])
+        # superdesign (good)
+        a[5].add_child(a[4])
+        a[4].add_child(a[3])
+        a[4].add_child(a[2])
+        a[3].add_child(a[1])
+        a[2].add_child(a[0])
+        #superdesign (bad - violates PVD)
+        c[4].add_child(c[3])
+        c[3].add_child(c[2])
+        c[2].add_child(c[1])
+        c[2].add_child(c[0])
         
         # Store as class variables:
-        self.subD = Design.Design(sub[3])
-        self.superD = Design.Design(sup[5])
-        self.nodemap = {sub[0]:sup[0],
-                        sub[1]:sup[1],
-                        sub[2]:sup[4],
-                        sub[3]:sup[5],
+        self.B = Design.Design(b[3])
+        self.A = Design.Design(a[5])
+        self.nodemap = {b[0]:a[0],
+                        b[1]:a[1],
+                        b[2]:a[4],
+                        b[3]:a[5],
                         }
+        self.C = Design.Design(c[4])
+        self.CB_nodemap = {b[3]:c[4],
+                           b[2]:c[3],
+                           b[1]:c[1],
+                           b[0]:c[0],
+                           }
+        
+        # reverse maps:
+        self.AB_reversemap = dict (zip(self.nodemap.values(),self.nodemap.keys()))
+        self.CB_reversemap = dict (zip(self.CB_nodemap.values(),self.CB_nodemap.keys()))
         
     def tearDown(self):
         pass
+    
+    def test_topological_embedding_brute(self):
+        # pass set:
+        AB_embedding = Embedding.Embedding(self.A, self.B)
+        CB_embedding = Embedding.Embedding(self.C, self.B)
+        pass_set = [AB_embedding, CB_embedding]
 
-    def test_edge2path(self):
-        assert self.check_edge2path(self.nodemap, self.superD, self.subD)
+        # fail set:
+        BA_embedding = Embedding.Embedding(self.B, self.A)
+        BC_embedding = Embedding.Embedding(self.B, self.C)
+        fail_set = [ BA_embedding, BC_embedding ]
+
+        
+        for i, embedding in enumerate(pass_set):
+            assert embedding.check_topological_embedding_brute(), 'Pass set ' + str(i)
+            
+        for i, embedding in enumerate(fail_set):
+            assert not embedding.check_topological_embedding_brute(), 'Fail set ' + str(i)
+        
 
     def test_vertex2vertex(self):
         # pass set:
-        pass_set = []
-        pass_set.append(Embedding(self.nodemap, self.superD, self.subD))
-        # fail set:
-        fail_set = []
-        # test reverse:
-        reversemap = dict (zip(self.nodemap.values(),self.nodemap.keys()))
-        fail_set.append(Embedding(reversemap, self.subD, self.superD))
-        
-        # STOPPED HERE: need to make check functions take embeddings, and wrap these checks in a for loop.
-        assert self.check_vertex2vertex(self.nodemap, self.superD, self.subD)
-        
-        
-        assert ~ self.check_vertex2vertex(reversemap, self.subD, self.superD)
-        
-    def check_vertex2vertex(self, nodemap, superD, subD):
-        ''' 
-        Returns True if nodemap satisfies vertex to vertex correspondence with superD
-        embedding subD.
-        map is a dict.
-        '''
-        # ensure nodemap is valid:
-        for i in nodemap.iteritems():
-            assert i[0] in subD.nodes
-            assert i[1] in superD.nodes
-        # check that all nodes in subD are present in map:
-        used_nodes = []
-        for node in subD.nodes:
-            # all nodes must be present:
-            if not nodemap.has_key(node):
-                return False
-            # mapped nodes must subsume functionality:
-            #if not nodemap[node].type > node.type:
-            #    return False
-            # check one-to-oneness:
-            if nodemap[node] in used_nodes:
-                return False
-            used_nodes.append(nodemap[node])
-        return True
-    
-    def check_edge2path(self, nodemap, superD, subD):
-        '''
-        Returns True if nodemap satisfies edge-to-path correspondence with superD
-        embedding subD.
-        '''
-        for edge in subD.edges:
-            super_parent = nodemap[edge.parent]
-            super_child = nodemap[edge.child]
-            p = super_child.parent
-            while p is not super_parent:
-                if p is None:
-                    return False    # root reached
-                p = p.parent
-        return True
-            
+        AB_embedding = Embedding.Embedding(self.A, self.B, self.nodemap)
+        CB_embedding = Embedding.Embedding(self.C, self.B, self.CB_nodemap)
+        pass_set = [AB_embedding, CB_embedding]
 
+        # fail set:
+        BA_embedding = Embedding.Embedding(self.B, self.A, self.AB_reversemap)
+        BC_embedding = Embedding.Embedding(self.B, self.C, self.CB_reversemap)
+        fail_set = [ BA_embedding, BC_embedding ]
+        
+        for i, embedding in enumerate(pass_set):
+            assert embedding.check_vertex2vertex(), 'Pass set ' + str(i)
+            
+        for i, embedding in enumerate(fail_set):
+            assert not embedding.check_vertex2vertex(), 'Fail set' + str(i)
+        
+    def test_edge2path(self):
+        # pass set:
+        AB_embedding = Embedding.Embedding(self.A, self.B, self.nodemap)
+        CB_embedding = Embedding.Embedding(self.C, self.B, self.CB_nodemap)
+        pass_set = [AB_embedding, CB_embedding]
+
+        # fail set:
+        #BA_embedding = Embedding.Embedding(self.B, self.A, self.AB_reversemap)
+        #BC_embedding = Embedding.Embedding(self.B, self.C, self.CB_reversemap)
+        #fail_set = [ BA_embedding, BC_embedding ]
+        fail_set = []
+        
+        for i, embedding in enumerate(pass_set):
+            assert embedding.check_edge2path(), 'Pass set ' + str(i)
+            
+        for i, embedding in enumerate(fail_set):
+            assert not embedding.check_edge2path(), 'Fail set ' + str(i)
+        #assert self.check_edge2path(self.A, self.B, self.nodemap)
+        
+    def test_vertex_disjointness(self):
+        # pass set:
+        AB_embedding = Embedding.Embedding(self.A, self.B, self.nodemap)
+        CB_embedding = Embedding.Embedding(self.C, self.B, self.CB_nodemap)
+        pass_set = [AB_embedding]
+
+        # fail set:
+        #BA_embedding = Embedding.Embedding(self.B, self.A, self.AB_reversemap)
+        #BC_embedding = Embedding.Embedding(self.B, self.C, self.CB_reversemap)
+        #fail_set = [ BA_embedding, BC_embedding ]
+        fail_set = [CB_embedding]
+        
+        for i, embedding in enumerate(pass_set):
+            assert embedding.check_vertex_disjointness(), 'Pass set ' + str(i)
+            
+        for i, embedding in enumerate(fail_set):
+            assert not embedding.check_vertex_disjointness(), 'Fail set ' + str(i)
+        
+        
 if __name__ == "__main__":
     #import sys;sys.argv = ['', 'Test.testName']
     unittest.main()

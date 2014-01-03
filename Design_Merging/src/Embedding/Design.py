@@ -3,18 +3,21 @@ Created on Dec 29, 2013
 
 @author: tariktosun
 '''
-from Embedding.Node import Node
+#from Embedding.Node import Node
+
+import Node
 
 class Design(object):
     '''
     A design, composed of nodes and edges.
     '''
 
-
     def __init__(self, root_node):
         '''
         Constructor
         '''
+        assert isinstance(root_node, Node.Node)
+        
         # list of nodes in this design
         nodes = []
         edges = []
@@ -27,7 +30,7 @@ class Design(object):
         '''
         Extracts all nodes and edges from a connected set of nodes.
         '''
-        assert not root_node in nodes, "Something is wrong!"
+        assert not root_node in nodes, "Design tree is invalid."
         nodes.append(root_node)
         if root_node.parent_edge:
             edges.append(root_node.parent_edge)

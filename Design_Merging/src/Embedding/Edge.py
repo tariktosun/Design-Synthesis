@@ -4,6 +4,8 @@ Created on Dec 28, 2013
 @author: tariktosun
 '''
 
+import Node
+
 class Edge(object):
     '''
     Edge class for design embedding.
@@ -14,6 +16,9 @@ class Edge(object):
         '''
         parent and child are Nodes.
         '''
+        assert isinstance(parent, Node.Node)
+        assert isinstance(child, Node.Node)
+        
         # The parent node
         self.parent = parent
         # The child node
