@@ -33,14 +33,14 @@ class Embedding(object):
         
         self.nodemap = nodemap
         
-    def pretty_nodemap(self, nodemap=0):
+    def pretty_nodemap(self, nodemap=-1):
         '''
         Pretty-print the nodemap.
         '''
-        if nodemap==0:  # hack to produce default behavior.
+        if nodemap==-1:  # hack to produce default behavior.
             return {k.name:v.name for k,v in self.nodemap.iteritems()}
         elif type(nodemap) is dict:
-            return {k.name:v.name for k,v in nodemap.iteritems()}
+            return {eval(k.name):eval(v.name) for k,v in nodemap.iteritems()}
         else:
             return nodemap
             
@@ -50,8 +50,10 @@ class Embedding(object):
         Pretty-print the table T
         '''
         super_names = [N.name for N in self.superD.nodes]
-        sub_names = [N.name for N in self.subD.nodes] 
-        T_list = [[self.pretty_nodemap(vv) for vv in v.itervalues()] for v in self.T.itervalues()]
+        sub_names = [N.name for N in self.subD.nodes]
+        T_list = [[self.pretty_nodemap(self.T[superN][subN]) for subN in self.subD.nodes]
+                   for superN in self.superD.nodes]
+        #T_list = [[self.pretty_nodemap(vv) for vv in v.itervalues()] for v in self.T.itervalues()]
         return pandas.DataFrame(T_list, super_names, sub_names)
         #print {k.name:{kk.name:vv  for kk,vv in v.iteritems()} for k,v in self.T.iteritems()}     
         
@@ -79,8 +81,13 @@ class Embedding(object):
         
             # < Add end-effector check here >
             
-            # We have found an embedding. Record it:
-            self.T[superN][subN] = {superN: subN}
+            # We have found an embedding. Record it and propagate upwards:
+            nodemap = {subN:superN}
+            self.T[superN][subN] = nodemap
+            p = superN.parent
+            while p is not None:
+                self.T[p][subN] = nodemap
+                p = p.parent
             return True
         elif subN.children == []:
             ''' base case 2: superN has children, but subN does not.
@@ -106,7 +113,7 @@ class Embedding(object):
             
             # all tests passed, so we have found a root-matched embedding.
             # all children of superN in this case MUST be unused (subN is a leaf)
-            nodemap = {superN: subN}
+            nodemap = {subN:superN}
             self.T[superN][subN] = nodemap
             # propagate to parents:
             p = superN.parent
@@ -169,6 +176,8 @@ class Embedding(object):
                             child_nodemap = self.T[sup][sub]
                             nodemap += child_nodemap.items()
                         nodemap = dict( nodemap )
+                        # add in the parent pairing:
+                        nodemap[subN] = superN                        
                         self.T[superN][subN] = nodemap
                         # propagate to parents:
                         p = superN.parent
@@ -176,6 +185,8 @@ class Embedding(object):
                             self.T[p][subN] = nodemap
                             p = p.parent
                         return True
+            # children cannot be matched; embedding fails.
+            self.T[superN][subN] = False
             return False
         
               
