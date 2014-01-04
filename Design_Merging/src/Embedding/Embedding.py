@@ -7,6 +7,7 @@ Created on Dec 30, 2013
 import Design
 from itertools import permutations
 import numpy as np
+import pandas
 
 class Embedding(object):
     '''
@@ -23,62 +24,172 @@ class Embedding(object):
         if nodemap is not None:
             assert isinstance(nodemap, dict), 'Incorrect arguments for Embedding'
         
-        self.A = superD
-        self.B = subD
+        self.superD = superD
+        self.subD = subD
         
         # Initialize table for dynamic programming.
-        self.T = { superN:{ subN:None for subN in self.B.nodes } 
-                  for superN in self.A.nodes }
+        self.T = { superN:{ subN:None for subN in self.subD.nodes } 
+                  for superN in self.superD.nodes }
         
         self.nodemap = nodemap
+        
+    def pretty_nodemap(self, nodemap=0):
+        '''
+        Pretty-print the nodemap.
+        '''
+        if nodemap==0:  # hack to produce default behavior.
+            return {k.name:v.name for k,v in self.nodemap.iteritems()}
+        elif type(nodemap) is dict:
+            return {k.name:v.name for k,v in nodemap.iteritems()}
+        else:
+            return nodemap
+            
+        
+    def pretty_T(self):
+        '''
+        Pretty-print the table T
+        '''
+        super_names = [N.name for N in self.superD.nodes]
+        sub_names = [N.name for N in self.subD.nodes] 
+        T_list = [[self.pretty_nodemap(vv) for vv in v.itervalues()] for v in self.T.itervalues()]
+        return pandas.DataFrame(T_list, super_names, sub_names)
+        #print {k.name:{kk.name:vv  for kk,vv in v.iteritems()} for k,v in self.T.iteritems()}     
         
     def check_topological_embedding_dynamic(self):
         '''
         Check topological embedding using dynamic programming algorithm.
         '''
-        return self._embeds(self.A.root_node, self.B.root_node)
+        boolean_result = self._embeds(self.superD.root_node, self.subD.root_node)
+        self.nodemap = self.T[self.superD.root_node][self.subD.root_node]
+        return boolean_result
         
     def _embeds(self, superN, subN):
         '''
         Recursive function testing subtree embedding.
         '''
-        # Recursively ensure that all child pairings have table entries:
-        for superC in superN.children:
-            for subC in subN.children:
-                if self.T[superC][subC] == None:
-                    self.T[superC][subC] = self._embeds(superC, subC)
-                    #print superC.name + ', ' + subC.name
+        if superN.children == [] and subN.children == []:
+            ''' base case 1: nodes with no children.
+            Embeds if:
+                subN may map to superN.
+            '''
+            
+            
+            
+            # < Add functionality check here >
         
-        # < Add a functionality check here >
-        # < Add end effector check here >
-        # check child matching using brute force enumeration:
-        if len(superN.children)<len(subN.children):
+            # < Add end-effector check here >
+            
+            # We have found an embedding. Record it:
+            self.T[superN][subN] = {superN: subN}
+            return True
+        elif subN.children == []:
+            ''' base case 2: superN has children, but subN does not.
+            Embeds if:
+                (1) subN may embed in a child of superN
+                (2) subN may map to superN
+            '''
+            
+            ''' (1) Does subN embed in a child of superN? '''
+            # Recursively ensure that all pairs of subN with children of superN
+            # have table entries:
+            for superC in superN.children:
+                if self.T[superC][subN] == None:
+                    self._embeds(superC, subN)
+            # return True if an embedding in a child was found (and propagated up)
+            if type(self.T[superN][subN]) == dict:
+                return True
+            
+            ''' (2) Does subN map to superN? '''
+            # < Add functionality check here >
+            
+            # < Add end-effector check here >
+            
+            # all tests passed, so we have found a root-matched embedding.
+            # all children of superN in this case MUST be unused (subN is a leaf)
+            nodemap = {superN: subN}
+            self.T[superN][subN] = nodemap
+            # propagate to parents:
+            p = superN.parent
+            while p is not None:
+                self.T[p][subN] = nodemap
+                p = p.parent
+            #return
+            return True
+        elif superN.children == []:
+            ''' if superN has no children but subN has children, superN cannot
+            possibly embed subN. '''
+            self.T[superN][subN] = False
+            return False   
+        else:
+            ''' non-base case: Both subN and superN have children.
+            Embeds if:
+                (1) subN may embed in a child of superN
+                (2) A matching may be found between the children of subN and superN,
+                    and subN may map to superN.
+            '''
+                  
+            ''' (1) does subN embed in a child of superN? '''
+            # Recursively ensure that all pairs of subN with children of superN
+            # have table entries:
+            for superC in superN.children:
+                if self.T[superC][subN] == None:
+                    self._embeds(superC, subN)
+            # return True if an embedding in a child was found (and propagated up)
+            if type(self.T[superN][subN]) == dict:
+                return True
+            
+            ''' (2) Can a matching be found between children of subN and superN,
+                    and can subN map to superN? ''' 
+            # Recursively ensure that all child pairings have table entries:
+            for superC in superN.children:
+                for subC in subN.children:
+                    if self.T[superC][subC] == None:
+                        #self.T[superC][subC] = self._embeds(superC, subC)
+                        self._embeds(superC, subC)
+            
+            # < Add a functionality check here >
+            
+            # < Add end effector check here >
+            
+            # check child matching using brute force enumeration:
+            if len(superN.children)<len(subN.children):
+                # if superN has fewer children than subN, vertex-disjoint embedding is impossible.
+                self.T[superN][subN] = False
+                return False
+            #brute force search for matching:
+            for sub_children_perm in permutations(subN.children):
+                for super_children_perm in permutations(superN.children, len(subN.children)):
+                    # NOTE: all() evaluates to True if arg is not False or None.
+                    # NOTE: all( [] ) evaluates to True.
+                    if all( type(self.T[sup][sub])==dict for sup,sub in zip(super_children_perm, sub_children_perm) ):
+                        # We have found an embedding. Record it and propagate upwards.
+                        # Merge nodemaps of all child pairings in table:
+                        nodemap = []
+                        for sup,sub in zip(super_children_perm, sub_children_perm):
+                            child_nodemap = self.T[sup][sub]
+                            nodemap += child_nodemap.items()
+                        nodemap = dict( nodemap )
+                        self.T[superN][subN] = nodemap
+                        # propagate to parents:
+                        p = superN.parent
+                        while p is not None:
+                            self.T[p][subN] = nodemap
+                            p = p.parent
+                        return True
             return False
-        for sub_children_perm in permutations(subN.children):
-            for super_children_perm in permutations(superN.children, len(subN.children)):
-                # NOTE: all( [] ) evaluates to True.
-                if all( self.T[z[0]][z[1]]==True for z in zip(super_children_perm, sub_children_perm) ):
-                    # We have found an embedding. Propagate upwards.
-                    p = superN.parent
-                    while p is not None:
-                        self.T[p][subN] = True
-                        p = p.parent
-                    #print [foo.values() for foo in self.T.values()]
-                    return True
-        return False
         
               
     def check_topological_embedding_brute(self):
         '''
         Brute-force combinatoric method to check topological embedding
         '''
-        N = len(self.B.nodes) # number of subdesign nodes
-        if len(self.A.nodes) < N:
+        N = len(self.subD.nodes) # number of subdesign nodes
+        if len(self.superD.nodes) < N:
             # shortcut - fewer nodes in superdesign
             self.nodemap = None
             return False
-        for sub_perm in permutations(self.B.nodes):
-            for super_perm in permutations(self.A.nodes, N):
+        for sub_perm in permutations(self.subD.nodes):
+            for super_perm in permutations(self.superD.nodes, N):
                 self.nodemap = dict (zip(sub_perm, super_perm))
                 if self.check_vertex2vertex():
                     if self.check_edge2path():
@@ -95,8 +206,8 @@ class Embedding(object):
         map is a dict.
         '''
         nodemap = self.nodemap
-        superD = self.A
-        subD = self.B
+        superD = self.superD
+        subD = self.subD
         # ensure nodemap is valid:
         for i in nodemap.iteritems():
             assert i[0] in subD.nodes
@@ -122,7 +233,7 @@ class Embedding(object):
         embedding B.
         '''
         #A = embedding.A
-        subD = self.B
+        subD = self.subD
         nodemap = self.nodemap
         for edge in subD.edges:
             assert nodemap.has_key(edge.parent), 'Edge parent maps to no node in superdesign'
@@ -140,7 +251,7 @@ class Embedding(object):
         '''
         Returns True if nodemap is path-vertex disjoint, false otherwise.
         '''
-        subD = self.B
+        subD = self.subD
         nodemap = self.nodemap
         used_nodes = []
         for edge in subD.edges:
@@ -148,7 +259,7 @@ class Embedding(object):
             super_parent = nodemap[edge.parent]
             assert nodemap.has_key(edge.child), 'Edge child maps to no node in superdesign'
             super_child = nodemap[edge.child]
-            p = super_child.parent
+            p = super_child
             while p is not super_parent:
                 assert p is not None, 'Edge does not map to a path in superdesign.'
                 if p in used_nodes:
