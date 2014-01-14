@@ -9,7 +9,7 @@ import Embedding.Node as Node
 import Embedding.Design as Design
 from Embedding import Embedding
 
-class Test_Embedding(unittest.TestCase):
+class Test_Toplogy_Embedding(unittest.TestCase):
      
     def setUp(self):
         ''' define fixtures for tests. '''
