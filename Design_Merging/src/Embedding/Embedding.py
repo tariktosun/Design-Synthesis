@@ -13,18 +13,20 @@ class Embedding(object):
     Embedding class, specifying the way one design may embed another.
     '''
 
-
-    def __init__(self, superD, subD, nodemap=None):
+    def __init__(self, superD, subD, types_subsumed, nodemap=None):
         '''
         Constructor
         '''
-        assert isinstance(superD, Design.Design), 'Incorrect arguments for Embedding'
-        assert isinstance(subD, Design.Design), 'Incorrect arguments for Embedding'
+        assert isinstance( superD, Design.Design ), 'Incorrect arguments for Embedding'
+        assert isinstance( subD, Design.Design ), 'Incorrect arguments for Embedding'
+        assert isinstance( types_subsumed, dict ), 'Incorrect arguments for Embedding'
         if nodemap is not None:
             assert isinstance(nodemap, dict), 'Incorrect arguments for Embedding'
         
         self.superD = superD
         self.subD = subD
+        self.types_subsumed = types_subsumed
+        self.valid_types = types_subsumed.keys()
         
         # Initialize table for dynamic programming.
         self.T = { superN:{ subN:None for subN in self.subD.nodes } 
@@ -54,7 +56,31 @@ class Embedding(object):
                    for superN in self.superD.nodes]
         #T_list = [[self.pretty_nodemap(vv) for vv in v.itervalues()] for v in self.T.itervalues()]
         return pandas.DataFrame(T_list, super_names, sub_names)
-        #print {k.name:{kk.name:vv  for kk,vv in v.iteritems()} for k,v in self.T.iteritems()}     
+        #print {k.name:{kk.name:vv  for kk,vv in v.iteritems()} for k,v in self.T.iteritems()}
+        
+    def type_subsumes(self, supertype, subtype):
+        '''
+        Returns True if supertype subsumes subtype according to
+        self.types_subsumed, False otherwise.
+        '''
+        assert supertype in self.valid_types, 'Type ' + str(supertype) + ' is invalid.'
+        return subtype in self.types_subsumed[supertype]
+        
+    def node_subsumes(self, superN, subN):
+        '''
+        Returns True if superN may subsume subN, False otherwise.
+        Checks functionality and end effector.
+        '''
+        # functionality check:
+        if not self.type_subsumes(superN.type, subN.type):
+            return False
+        # end-effector check:
+        if subN.is_end_effector:
+            if not superN.is_end_effector:
+                return False
+            if not superN.children == []:
+                return False
+        return True    
         
     def check_topological_embedding_dynamic(self):
         '''
@@ -74,11 +100,9 @@ class Embedding(object):
                 subN may map to superN.
             '''
             
-            
-            
-            # < Add functionality check here >
-        
-            # < Add end-effector check here >
+            # functionality and end-effector check:
+            if not self.node_subsumes(superN, subN):
+                return False
             
             # We have found an embedding. Record it and propagate upwards:
             nodemap = {subN:superN}
@@ -106,9 +130,10 @@ class Embedding(object):
                 return True
             
             ''' (2) Does subN map to superN? '''
-            # < Add functionality check here >
             
-            # < Add end-effector check here >
+            # functionality and end-effector check:
+            if not self.node_subsumes(superN, subN):
+                return False
             
             # all tests passed, so we have found a root-matched embedding.
             # all children of superN in this case MUST be unused (subN is a leaf)
@@ -153,9 +178,9 @@ class Embedding(object):
                         #self.T[superC][subC] = self._embeds(superC, subC)
                         self._embeds(superC, subC)
             
-            # < Add a functionality check here >
-            
-            # < Add end effector check here >
+            # functionality and end-effector check:
+            if not self.node_subsumes(superN, subN):
+                return False
             
             # check child matching using brute force enumeration:
             if len(superN.children)<len(subN.children):
@@ -229,8 +254,8 @@ class Embedding(object):
             if not nodemap.has_key(node):
                 return False
             # mapped nodes must subsume functionality:
-            #if not AB_nodemap[node].type > node.type:
-            #    return False
+            if not self.type_subsumes(nodemap[node].type, node.type):
+                return False
             # End effectors must map to end-effectors, and may have no children.
             if node.is_end_effector:
                 if not nodemap[node].is_end_effector:

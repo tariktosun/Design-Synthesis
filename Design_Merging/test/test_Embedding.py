@@ -10,19 +10,26 @@ import Embedding.Design as Design
 from Embedding import Embedding
 
 class Test_Embedding(unittest.TestCase):
-    
-    
+     
     def setUp(self):
         ''' define fixtures for tests. '''
+        # Type subsumption:
+        #valid_types = [1, 2]
+        self.types_subsumed = {1: [1,2], 2: [2]}
+        
+        # Designs:
         b = [0]*4
         a = [0]*6
         c = [0]*5
         for i in xrange(len(b)):
             b[i] = Node.Node(str(i))
+            b[i].type = 1
         for i in xrange(len(a)):
             a[i] = Node.Node(str(i))
+            a[i].type = 1
         for i in xrange(len(c)):
             c[i] = Node.Node(str(i))
+            c[i].type = 1
         # build structure:
         # subdesign:
         b[3].add_child(b[2])
@@ -87,15 +94,15 @@ class Test_Embedding(unittest.TestCase):
     
     def test_topological_embedding_dynamic(self):
         # pass set:
-        AB_embedding = Embedding.Embedding(self.A, self.B)
-        CB_embedding = Embedding.Embedding(self.C, self.B)
+        AB_embedding = Embedding.Embedding(self.A, self.B, self.types_subsumed)
+        CB_embedding = Embedding.Embedding(self.C, self.B, self.types_subsumed)
         pass_set = [AB_embedding, CB_embedding ]
         #pass_set = [ CB_embedding ]
         #pass_set = [AB_embedding]
 
         # fail set:
-        BA_embedding = Embedding.Embedding(self.B, self.A)
-        BC_embedding = Embedding.Embedding(self.B, self.C)
+        BA_embedding = Embedding.Embedding(self.B, self.A, self.types_subsumed)
+        BC_embedding = Embedding.Embedding(self.B, self.C, self.types_subsumed)
         fail_set = [ BA_embedding, BC_embedding ]
 
         
@@ -110,13 +117,13 @@ class Test_Embedding(unittest.TestCase):
     
     def test_topological_embedding_brute(self):
         # pass set:
-        AB_embedding = Embedding.Embedding(self.A, self.B)
-        CB_embedding = Embedding.Embedding(self.C, self.B)
+        AB_embedding = Embedding.Embedding(self.A, self.B, self.types_subsumed)
+        CB_embedding = Embedding.Embedding(self.C, self.B, self.types_subsumed)
         pass_set = [AB_embedding, CB_embedding] # There is actually a valid CB embedding.
 
         # fail set:
-        BA_embedding = Embedding.Embedding(self.B, self.A)
-        BC_embedding = Embedding.Embedding(self.B, self.C)
+        BA_embedding = Embedding.Embedding(self.B, self.A, self.types_subsumed)
+        BC_embedding = Embedding.Embedding(self.B, self.C, self.types_subsumed)
         fail_set = [ BA_embedding, BC_embedding]
 
         
@@ -132,14 +139,14 @@ class Test_Embedding(unittest.TestCase):
 
     def test_vertex2vertex(self):
         # pass set:
-        AB_embedding = Embedding.Embedding(self.A, self.B, self.AB_nodemap)
-        CB_embedding = Embedding.Embedding(self.C, self.B, self.CB_nodemap)
-        AB_fails_ee = Embedding.Embedding(self.A, self.B, self.AB_fails_ee)
+        AB_embedding = Embedding.Embedding(self.A, self.B, self.types_subsumed, self.AB_nodemap)
+        CB_embedding = Embedding.Embedding(self.C, self.B, self.types_subsumed, self.CB_nodemap)
+        AB_fails_ee = Embedding.Embedding(self.A, self.B, self.types_subsumed, self.AB_fails_ee)
         pass_set = [ AB_embedding, CB_embedding ]
 
         # fail set:
-        BA_embedding = Embedding.Embedding(self.B, self.A, self.AB_reversemap)
-        BC_embedding = Embedding.Embedding(self.B, self.C, self.CB_reversemap)
+        BA_embedding = Embedding.Embedding(self.B, self.A, self.types_subsumed, self.AB_reversemap)
+        BC_embedding = Embedding.Embedding(self.B, self.C, self.types_subsumed, self.CB_reversemap)
         fail_set = [ BA_embedding, BC_embedding, AB_fails_ee ]
         
         for i, embedding in enumerate(pass_set):
@@ -150,9 +157,9 @@ class Test_Embedding(unittest.TestCase):
         
     def test_edge2path(self):
         # pass set:
-        AB_embedding = Embedding.Embedding(self.A, self.B, self.AB_nodemap)
-        CB_embedding = Embedding.Embedding(self.C, self.B, self.CB_nodemap)
-        AB_fails_ee = Embedding.Embedding(self.A, self.B, self.AB_fails_ee)
+        AB_embedding = Embedding.Embedding(self.A, self.B, self.types_subsumed, self.AB_nodemap)
+        CB_embedding = Embedding.Embedding(self.C, self.B, self.types_subsumed, self.CB_nodemap)
+        AB_fails_ee = Embedding.Embedding(self.A, self.B, self.types_subsumed, self.AB_fails_ee)
         pass_set = [AB_embedding, CB_embedding, AB_fails_ee]
 
         # fail set:
@@ -170,10 +177,10 @@ class Test_Embedding(unittest.TestCase):
         
     def test_vertex_disjointness(self):
         # pass set:
-        AB_embedding = Embedding.Embedding(self.A, self.B, self.AB_nodemap)
-        CB_embedding = Embedding.Embedding(self.C, self.B, self.CB_nodemap)
-        CB_problematic = Embedding.Embedding(self.C, self.B, self.CB_problematic_map)
-        AB_fails_ee = Embedding.Embedding(self.A, self.B, self.AB_fails_ee)
+        AB_embedding = Embedding.Embedding(self.A, self.B, self.types_subsumed, self.AB_nodemap)
+        CB_embedding = Embedding.Embedding(self.C, self.B, self.types_subsumed, self.CB_nodemap)
+        CB_problematic = Embedding.Embedding(self.C, self.B, self.types_subsumed, self.CB_problematic_map)
+        AB_fails_ee = Embedding.Embedding(self.A, self.B, self.types_subsumed, self.AB_fails_ee)
         
         pass_set = [AB_embedding, AB_fails_ee]
 
