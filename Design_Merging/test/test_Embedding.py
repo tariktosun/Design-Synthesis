@@ -23,13 +23,13 @@ class Test_Embedding(unittest.TestCase):
         c = [0]*5
         for i in xrange(len(b)):
             b[i] = Node.Node(str(i))
-            b[i].type = 1
+            b[i].type = 2
         for i in xrange(len(a)):
             a[i] = Node.Node(str(i))
-            a[i].type = 1
+            a[i].type = 2
         for i in xrange(len(c)):
             c[i] = Node.Node(str(i))
-            c[i].type = 1
+            c[i].type = 2
         # build structure:
         # subdesign:
         b[3].add_child(b[2])
@@ -57,14 +57,14 @@ class Test_Embedding(unittest.TestCase):
         c[0].is_end_effector = True
         
         # Store as class variables:
-        self.B = Design.Design(b[3])
-        self.A = Design.Design(a[5])
+        self.B = Design.Design(b[3], b)
+        self.A = Design.Design(a[5], a)
         self.AB_nodemap = {b[0]:a[0],
                         b[1]:a[1],
                         b[2]:a[4],
                         b[3]:a[5],
                         }
-        self.C = Design.Design(c[4])
+        self.C = Design.Design(c[4], c)
         self.CB_nodemap = {b[3]:c[4],
                            b[2]:c[3],
                            b[1]:c[1],
@@ -93,6 +93,28 @@ class Test_Embedding(unittest.TestCase):
         pass
     
     def test_topological_embedding_dynamic(self):
+        ''' NOTE: This test contains some functionality manipulations!!!'''
+        
+        ''' Swap functionality around to perform tests:'''
+        AB_embedding = Embedding.Embedding(self.A, self.B, self.types_subsumed)
+        CB_embedding = Embedding.Embedding(self.C, self.B, self.types_subsumed)
+        
+        self.B.nodes[2].type = 1
+        for i, embedding in enumerate([ AB_embedding, CB_embedding ]):
+            assert not embedding.check_topological_embedding_dynamic(), 'Functionality fail set ' + str(i)
+        self.A.nodes[4].type = 1
+        self.C.nodes[2].type = 1
+        for i, embedding in enumerate([ AB_embedding, CB_embedding ]):
+            assert embedding.check_topological_embedding_dynamic(), 'Functionality pass set ' + str(i)
+        self.B.nodes[2].type = 2
+        for i, embedding in enumerate([ AB_embedding, CB_embedding ]):
+            assert embedding.check_topological_embedding_dynamic(), 'Functionality pass set ' + str(i)        
+              
+        ''' Change functionality back, and continue tests as usual. '''
+        self.A.nodes[4].type = 2
+        self.C.nodes[2].type = 2
+        self.B.nodes[2].type = 2
+        
         # pass set:
         AB_embedding = Embedding.Embedding(self.A, self.B, self.types_subsumed)
         CB_embedding = Embedding.Embedding(self.C, self.B, self.types_subsumed)
@@ -116,6 +138,28 @@ class Test_Embedding(unittest.TestCase):
             assert not embedding.check_topological_embedding_dynamic(), 'Fail set ' + str(i)
     
     def test_topological_embedding_brute(self):
+        ''' NOTE: This test contains some functionality manipulations!!!'''
+        
+        ''' Swap functionality around to perform tests:'''
+        AB_embedding = Embedding.Embedding(self.A, self.B, self.types_subsumed)
+        CB_embedding = Embedding.Embedding(self.C, self.B, self.types_subsumed)
+        
+        self.B.nodes[2].type = 1
+        for i, embedding in enumerate([ AB_embedding, CB_embedding ]):
+            assert not embedding.check_topological_embedding_brute(), 'Functionality fail set ' + str(i)
+        self.A.nodes[4].type = 1
+        self.C.nodes[2].type = 1
+        for i, embedding in enumerate([ AB_embedding, CB_embedding ]):
+            assert embedding.check_topological_embedding_brute(), 'Functionality pass set ' + str(i)
+        self.B.nodes[2].type = 2
+        for i, embedding in enumerate([ AB_embedding, CB_embedding ]):
+            assert embedding.check_topological_embedding_brute(), 'Functionality pass set ' + str(i)        
+              
+        ''' Change functionality back, and continue tests as usual. '''
+        self.A.nodes[4].type = 2
+        self.C.nodes[2].type = 2
+        self.B.nodes[2].type = 2
+        
         # pass set:
         AB_embedding = Embedding.Embedding(self.A, self.B, self.types_subsumed)
         CB_embedding = Embedding.Embedding(self.C, self.B, self.types_subsumed)
@@ -138,6 +182,28 @@ class Test_Embedding(unittest.TestCase):
         
 
     def test_vertex2vertex(self):
+        ''' NOTE: This test contains some functionality manipulations!!!'''
+        
+        ''' Swap functionality around to perform tests:'''
+        AB_embedding = Embedding.Embedding(self.A, self.B, self.types_subsumed, self.AB_nodemap)
+        CB_embedding = Embedding.Embedding(self.C, self.B, self.types_subsumed, self.CB_nodemap)
+        
+        self.B.nodes[2].type = 1
+        for i, embedding in enumerate([ AB_embedding, CB_embedding ]):
+            assert not embedding.check_vertex2vertex(), 'Functionality fail set ' + str(i)
+        self.A.nodes[4].type = 1
+        self.C.nodes[3].type = 1
+        for i, embedding in enumerate([ AB_embedding, CB_embedding ]):
+            assert embedding.check_vertex2vertex(), 'Functionality pass set ' + str(i)
+        self.B.nodes[2].type = 2
+        for i, embedding in enumerate([ AB_embedding, CB_embedding ]):
+            assert embedding.check_vertex2vertex(), 'Functionality pass set ' + str(i)        
+              
+        ''' Change functionality back, and continue tests as usual. '''
+        self.A.nodes[4].type = 2
+        self.C.nodes[3].type = 2
+        self.B.nodes[2].type = 2
+        
         # pass set:
         AB_embedding = Embedding.Embedding(self.A, self.B, self.types_subsumed, self.AB_nodemap)
         CB_embedding = Embedding.Embedding(self.C, self.B, self.types_subsumed, self.CB_nodemap)
