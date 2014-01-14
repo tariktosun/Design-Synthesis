@@ -91,7 +91,12 @@ class Embedding(object):
         Check topological embedding using dynamic programming algorithm.
         '''
         boolean_result = self._embeds(self.superD.root_node, self.subD.root_node)
-        self.AB_nodemap = self.T[self.superD.root_node][self.subD.root_node]
+        if boolean_result:
+            # take the first valid embedding stored at the root.
+            (length, root, nodemap) = self.T[self.superD.root_node][self.subD.root_node][0]
+            self.AB_nodemap = nodemap
+        else:
+            self.AB_nodemap = False
         return boolean_result
         
     def _embeds(self, superN, subN):
@@ -110,11 +115,15 @@ class Embedding(object):
             
             # We have found an embedding. Record it and propagate upwards:
             nodemap = {subN:superN}
-            self.T[superN][subN] = nodemap
-            p = superN.parent
-            while p is not None:
-                self.T[p][subN] = nodemap
-                p = p.parent
+            self._record_and_propagate(superN, subN, nodemap)
+            
+            #             nodemap = {subN:superN}
+            #             self.T[superN][subN] = nodemap
+            #             p = superN.parent
+            #             while p is not None:
+            #                 self.T[p][subN] = nodemap
+            #                 p = p.parent
+            
             return True
         elif subN.children == []:
             ''' base case 2: superN has children, but subN does not.
@@ -130,7 +139,8 @@ class Embedding(object):
                 if self.T[superC][subN] == None:
                     self._embeds(superC, subN)
             # return True if an embedding in a child was found (and propagated up)
-            if type(self.T[superN][subN]) == dict:
+            #if type(self.T[superN][subN]) == dict:
+            if type(self.T[superN][subN]) == list:
                 return True
             
             ''' (2) Does subN map to superN? '''
@@ -142,12 +152,15 @@ class Embedding(object):
             # all tests passed, so we have found a root-matched embedding.
             # all children of superN in this case MUST be unused (subN is a leaf)
             nodemap = {subN:superN}
-            self.T[superN][subN] = nodemap
-            # propagate to parents:
-            p = superN.parent
-            while p is not None:
-                self.T[p][subN] = nodemap
-                p = p.parent
+            self._record_and_propagate(superN, subN, nodemap)
+            
+            #             self.T[superN][subN] = nodemap
+            #             # propagate to parents:
+            #             p = superN.parent
+            #             while p is not None:
+            #                 self.T[p][subN] = nodemap
+            #                 p = p.parent
+            
             #return
             return True
         elif superN.children == []:
@@ -170,6 +183,7 @@ class Embedding(object):
                 if self.T[superC][subN] == None:
                     self._embeds(superC, subN)
             # return True if an embedding in a child was found (and propagated up)
+            #if type(self.T[superN][subN]) == dict:
             if type(self.T[superN][subN]) == dict:
                 return True
             
@@ -194,29 +208,92 @@ class Embedding(object):
             #brute force search for matching:
             for sub_children_perm in permutations(subN.children):
                 for super_children_perm in permutations(superN.children, len(subN.children)):
-                    # NOTE: all() evaluates to True if arg is not False or None.
-                    # NOTE: all( [] ) evaluates to True.
-                    if all( type(self.T[sup][sub])==dict for sup,sub in zip(super_children_perm, sub_children_perm) ):
+                    merged_nodemap = self._find_valid_matching(super_children_perm, sub_children_perm)
+                    if merged_nodemap:
                         # We have found an embedding. Record it and propagate upwards.
-                        # Merge nodemaps of all child pairings in table:
-                        nodemap = []
-                        for sup,sub in zip(super_children_perm, sub_children_perm):
-                            child_nodemap = self.T[sup][sub]
-                            nodemap += child_nodemap.items()
-                        nodemap = dict( nodemap )
                         # add in the parent pairing:
-                        nodemap[subN] = superN                        
-                        self.T[superN][subN] = nodemap
-                        # propagate to parents:
-                        p = superN.parent
-                        while p is not None:
-                            self.T[p][subN] = nodemap
-                            p = p.parent
+                        merged_nodemap[subN] = superN                        
+                        #                         # Merge nodemaps of all child pairings in table:
+                        #                         nodemap = []
+                        #                         for sup,sub in zip(super_children_perm, sub_children_perm):
+                        #                             child_nodemap = self.T[sup][sub]
+                        #                             nodemap += child_nodemap.items()
+                        #                         nodemap = dict( nodemap )
+                        #                         # add in the parent pairing:
+                        #                         nodemap[subN] = superN                        
+                        #                         self.T[superN][subN] = nodemap
+                        
+                        #self.T[superN][subN] = (0, superN, merged_nodemap)
+                        # record and propagate to parents:
+                        self._record_and_propagate(superN, subN, merged_nodemap)
+                        
+                        #                         p = superN.parent
+                        #                         while p is not None:
+                        #                             self.T[p][subN] = nodemap
+                        #                             p = p.parent
+                        #                         return True
                         return True
             # children cannot be matched; embedding fails.
             self.T[superN][subN] = False
             return False
+    
+    def _record_and_propagate(self, superN, subN, nodemap):
+        '''
+        Propagates an embedding to all parents of the super node.  Embeddings 
+        are stored in the table as: (length_to_root, root_of_embedding, nodemap),
+        where root_of_embedding is the node within the tree of superN to which
+        subN actually maps.
+        '''
+        super_path_length = 0
+        p = superN
+        while p is not None:
+            if self.T[p][subN] is None or self.T[p][subN] is False:
+                # Make a new list if we haven't entered anything here before.
+                self.T[p][subN] = []
+            # we should never be overwriting a False entry.
+            #assert self.T[p][subN] is not False, 'Attempted to record valid embedding in previously invalidated table spot'
+            
+            self.T[p][subN].append( (super_path_length, superN, nodemap) )
+            if p.parent is not None:
+                super_path_length += p.parent_edge.length
+            p = p.parent
+    
+    def _find_valid_matching(self, super_children_order, sub_children_order):
+        '''
+        Finds a valid matching (if there is one) and returns a merged nodemap.
+        Returns False if there is no valid matching.
+        ''' 
+        # this is for non-length case:
+        #return all( type(self.T[sup][sub])==dict for sup,sub in zip(super_children_order, sub_children_order) )
         
+        # NOTE: all() evaluates to True if arg is not False or None.
+        # NOTE: all( [] ) evaluates to True.
+        
+        if not all( type(self.T[sup][sub])==list for sup,sub in zip(super_children_order, sub_children_order) ):
+            # This ensures topological embedding.
+            return False
+        # now check lengths:
+        # Merge nodemaps of all child pairings in table:
+        merged_nodemap = []
+        for i, sub_child in enumerate(sub_children_order):
+            sub_length = sub_child.parent_edge.length
+            super_child = super_children_order[i]
+            super_length = super_child.parent_edge.length
+            for super_descendent_mapping in self.T[super_child][sub_child]:
+                length = super_descendent_mapping[0]
+                #root = super_descendent_mapping[1]
+                nodemap = super_descendent_mapping[2]
+                if super_length + length == sub_length * self.length_scaling:
+                    # match found!
+                    merged_nodemap += nodemap.items()            
+                    break   # (does not trigger else block)
+            else:   # triggers when we get all the way through above for loop.
+                return False    # no valid length match found.
+        # convert merged_nodemap to dict:    
+        merged_nodemap = dict( merged_nodemap )
+        return merged_nodemap
+        
+            
               
     def check_topological_embedding_brute(self):
         '''
