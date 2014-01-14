@@ -13,13 +13,16 @@ class Embedding(object):
     Embedding class, specifying the way one design may embed another.
     '''
 
-    def __init__(self, superD, subD, types_subsumed, nodemap=None):
+    def __init__(self, superD, subD, params, nodemap=None):
         '''
         Constructor
         '''
+        types_subsumed = params['types_subsumed']
+        length_scaling = params['length_scaling']
         assert isinstance( superD, Design.Design ), 'Incorrect arguments for Embedding'
         assert isinstance( subD, Design.Design ), 'Incorrect arguments for Embedding'
         assert isinstance( types_subsumed, dict ), 'Incorrect arguments for Embedding'
+        assert isinstance( length_scaling, (int, long, float) ), 'Incorrect arguments for Embedding'
         if nodemap is not None:
             assert isinstance(nodemap, dict), 'Incorrect arguments for Embedding'
         
@@ -27,6 +30,7 @@ class Embedding(object):
         self.subD = subD
         self.types_subsumed = types_subsumed
         self.valid_types = types_subsumed.keys()
+        self.length_scaling = length_scaling
         
         # Initialize table for dynamic programming.
         self.T = { superN:{ subN:None for subN in self.subD.nodes } 
@@ -271,7 +275,7 @@ class Embedding(object):
     def check_edge2path(self):
         '''
         Returns True if AB_nodemap satisfies edge-to-path correspondence with A
-        embedding B.
+        embedding B.  Length correspondence is checked.
         '''
         #A = embedding.A
         subD = self.subD
@@ -280,12 +284,26 @@ class Embedding(object):
             assert nodemap.has_key(edge.parent), 'Edge parent maps to no node in superdesign'
             super_parent = nodemap[edge.parent]
             assert nodemap.has_key(edge.child), 'Edge child maps to no node in superdesign'
+            # find a path that connects super_child to super_parent. Add up all
+            # edge lengths along that path.
             super_child = nodemap[edge.child]
-            p = super_child.parent
+            super_path_length = 0
+            
+            p = super_child
             while p is not super_parent:
-                if p is None:
-                    return False    # root reached
-                p = p.parent
+                if p.parent is None:
+                    return False    # design root reached
+                super_path_length += p.parent_edge.length
+                p = p.parent   
+            #             p = super_child.parent
+            #             while p is not super_parent:
+            #                 if p is None:
+            #                     return False    # root reached
+            #                 super_path_length += p.parent_edge.length
+            #                 p = p.parent
+            # length check:
+            if not super_path_length == (edge.length * self.length_scaling):
+                return False
         return True
             
     def check_vertex_disjointness(self):
