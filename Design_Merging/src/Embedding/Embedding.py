@@ -6,7 +6,6 @@ Created on Dec 30, 2013
 
 import Design
 from itertools import permutations
-import numpy as np
 import pandas
 
 class Embedding(object):
@@ -31,14 +30,14 @@ class Embedding(object):
         self.T = { superN:{ subN:None for subN in self.subD.nodes } 
                   for superN in self.superD.nodes }
         
-        self.nodemap = nodemap
+        self.AB_nodemap = nodemap
         
     def pretty_nodemap(self, nodemap=-1):
         '''
-        Pretty-print the nodemap.
+        Pretty-print the AB_nodemap.
         '''
         if nodemap==-1:  # hack to produce default behavior.
-            return {k.name:v.name for k,v in self.nodemap.iteritems()}
+            return {k.name:v.name for k,v in self.AB_nodemap.iteritems()}
         elif type(nodemap) is dict:
             return {eval(k.name):eval(v.name) for k,v in nodemap.iteritems()}
         else:
@@ -62,7 +61,7 @@ class Embedding(object):
         Check topological embedding using dynamic programming algorithm.
         '''
         boolean_result = self._embeds(self.superD.root_node, self.subD.root_node)
-        self.nodemap = self.T[self.superD.root_node][self.subD.root_node]
+        self.AB_nodemap = self.T[self.superD.root_node][self.subD.root_node]
         return boolean_result
         
     def _embeds(self, superN, subN):
@@ -197,29 +196,29 @@ class Embedding(object):
         N = len(self.subD.nodes) # number of subdesign nodes
         if len(self.superD.nodes) < N:
             # shortcut - fewer nodes in superdesign
-            self.nodemap = None
+            self.AB_nodemap = None
             return False
         for sub_perm in permutations(self.subD.nodes):
             for super_perm in permutations(self.superD.nodes, N):
-                self.nodemap = dict (zip(sub_perm, super_perm))
+                self.AB_nodemap = dict (zip(sub_perm, super_perm))
                 if self.check_vertex2vertex():
                     if self.check_edge2path():
                         if self.check_vertex_disjointness():
                             return True
         # no embedding found.
-        self.nodemap = None
+        self.AB_nodemap = None
         return False
         
     def check_vertex2vertex(self):
         ''' 
-        Returns True if nodemap satisfies vertex to vertex correspondence with A
+        Returns True if AB_nodemap satisfies vertex to vertex correspondence with A
         embedding B.
         map is a dict.
         '''
-        nodemap = self.nodemap
+        nodemap = self.AB_nodemap
         superD = self.superD
         subD = self.subD
-        # ensure nodemap is valid:
+        # ensure AB_nodemap is valid:
         for i in nodemap.iteritems():
             assert i[0] in subD.nodes
             assert i[1] in superD.nodes
@@ -230,8 +229,14 @@ class Embedding(object):
             if not nodemap.has_key(node):
                 return False
             # mapped nodes must subsume functionality:
-            #if not nodemap[node].type > node.type:
+            #if not AB_nodemap[node].type > node.type:
             #    return False
+            # End effectors must map to end-effectors, and may have no children.
+            if node.is_end_effector:
+                if not nodemap[node].is_end_effector:
+                    return False
+                if not nodemap[node].children == []:
+                    return False
             # check one-to-oneness:
             if nodemap[node] in used_nodes:
                 return False
@@ -240,12 +245,12 @@ class Embedding(object):
     
     def check_edge2path(self):
         '''
-        Returns True if nodemap satisfies edge-to-path correspondence with A
+        Returns True if AB_nodemap satisfies edge-to-path correspondence with A
         embedding B.
         '''
         #A = embedding.A
         subD = self.subD
-        nodemap = self.nodemap
+        nodemap = self.AB_nodemap
         for edge in subD.edges:
             assert nodemap.has_key(edge.parent), 'Edge parent maps to no node in superdesign'
             super_parent = nodemap[edge.parent]
@@ -260,10 +265,10 @@ class Embedding(object):
             
     def check_vertex_disjointness(self):
         '''
-        Returns True if nodemap is path-vertex disjoint, false otherwise.
+        Returns True if AB_nodemap is path-vertex disjoint, false otherwise.
         '''
         subD = self.subD
-        nodemap = self.nodemap
+        nodemap = self.AB_nodemap
         used_nodes = []
         for edge in subD.edges:
             assert nodemap.has_key(edge.parent), 'Edge parent maps to no node in superdesign'

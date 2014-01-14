@@ -38,4 +38,3 @@ class Design(object):
         for child in root_node.children:
             self.parse_tree(child, nodes, edges)
         return
-            

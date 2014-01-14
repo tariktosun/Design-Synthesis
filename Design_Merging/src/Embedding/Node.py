@@ -25,6 +25,8 @@ class Node(object):
         self.parent = None
         # Type abstractly captures functionality (for now)
         self.type = None
+        # Nodes that are end effectors  cannot have children.
+        self.is_end_effector = False
     
     def nodecost(self):
         '''
