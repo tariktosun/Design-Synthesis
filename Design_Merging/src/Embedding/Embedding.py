@@ -34,8 +34,7 @@ class Embedding(object):
         
         # Initialize table for dynamic programming.
         self.T = { superN:{ subN:None for subN in self.subD.nodes } 
-                  for superN in self.superD.nodes }
-        
+                  for superN in self.superD.nodes }  
         self.AB_nodemap = nodemap
         
     def pretty_nodemap(self, nodemap=-1):
@@ -56,9 +55,16 @@ class Embedding(object):
         '''
         super_names = [N.name for N in self.superD.nodes]
         sub_names = [N.name for N in self.subD.nodes]
-        T_list = [[self.pretty_nodemap(self.T[superN][subN]) for subN in self.subD.nodes]
-                   for superN in self.superD.nodes]
-        #T_list = [[self.pretty_nodemap(vv) for vv in v.itervalues()] for v in self.T.itervalues()]
+        #T_list = [[self.pretty_nodemap(self.T[superN][subN]) for subN in self.subD.nodes]
+        #           for superN in self.superD.nodes]
+        T_list = [[0 for _ in range(len(self.subD.nodes))] for _ in range(len(self.superD.nodes))]
+        for i,superN in enumerate(self.superD.nodes):
+            for j,subN in enumerate(self.subD.nodes):
+                if type(self.T[superN][subN]) == list:
+                    T_list[i][j] = True
+                else:
+                    T_list[i][j] = self.T[superN][subN]
+                      
         return pandas.DataFrame(T_list, super_names, sub_names)
         #print {k.name:{kk.name:vv  for kk,vv in v.iteritems()} for k,v in self.T.iteritems()}
         
@@ -90,10 +96,14 @@ class Embedding(object):
         '''
         Check topological embedding using dynamic programming algorithm.
         '''
+        # Clear table and nodemap:
+        self.T = { superN:{ subN:None for subN in self.subD.nodes } 
+                  for superN in self.superD.nodes }  
+        self.AB_nodemap = None
         boolean_result = self._embeds(self.superD.root_node, self.subD.root_node)
         if boolean_result:
             # take the first valid embedding stored at the root.
-            (length, root, nodemap) = self.T[self.superD.root_node][self.subD.root_node][0]
+            (_, _, nodemap) = self.T[self.superD.root_node][self.subD.root_node][0]
             self.AB_nodemap = nodemap
         else:
             self.AB_nodemap = False
@@ -103,6 +113,9 @@ class Embedding(object):
         '''
         Recursive function testing subtree embedding.
         '''
+        # This function should not be called more than once for a pairing.
+        assert self.T[superN][subN] is None, 'Attempted to call _embeds on a filled table entry.'
+        
         if superN.children == [] and subN.children == []:
             ''' base case 1: nodes with no children.
             Embeds if:
@@ -247,16 +260,17 @@ class Embedding(object):
         super_path_length = 0
         p = superN
         while p is not None:
-            if self.T[p][subN] is None or self.T[p][subN] is False:
+            if self.T[p][subN] is None:# or self.T[p][subN] is False:
                 # Make a new list if we haven't entered anything here before.
                 self.T[p][subN] = []
             # we should never be overwriting a False entry.
-            #assert self.T[p][subN] is not False, 'Attempted to record valid embedding in previously invalidated table spot'
+            assert self.T[p][subN] is not False, 'Attempted to record valid embedding in previously invalidated table spot'
             
             self.T[p][subN].append( (super_path_length, superN, nodemap) )
             if p.parent is not None:
                 super_path_length += p.parent_edge.length
             p = p.parent
+        return
     
     def _find_valid_matching(self, super_children_order, sub_children_order):
         '''
@@ -299,6 +313,10 @@ class Embedding(object):
         '''
         Brute-force combinatoric method to check topological embedding
         '''
+        # Clear table and nodemap:
+        self.T = { superN:{ subN:None for subN in self.subD.nodes } 
+                  for superN in self.superD.nodes }  
+        self.AB_nodemap = None
         N = len(self.subD.nodes) # number of subdesign nodes
         if len(self.superD.nodes) < N:
             # shortcut - fewer nodes in superdesign

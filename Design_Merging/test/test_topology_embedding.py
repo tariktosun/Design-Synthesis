@@ -4,9 +4,9 @@ Created on Dec 29, 2013
 @author: tariktosun
 '''
 import unittest
-import Embedding.Node as Node
+#import Embedding.Node as Node
 #import Embedding.Edge as Edge
-import Embedding.Design as Design
+#import Embedding.Design as Design
 from Embedding import Embedding
 from fixtures_topology_embedding import setUpTopologyFixtures
 

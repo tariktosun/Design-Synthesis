@@ -4,9 +4,9 @@ Created on Jan 14, 2014
 @author: tariktosun
 '''
 import unittest
-import Embedding.Node as Node
+#import Embedding.Node as Node
 #import Embedding.Edge as Edge
-import Embedding.Design as Design
+#import Embedding.Design as Design
 from Embedding import Embedding
 from fixtures_topology_embedding import setUpTopologyFixtures
 
@@ -110,9 +110,13 @@ class Test_Length_Embedding(unittest.TestCase):
             
         for i, embedding in enumerate(fail_set):
             assert not embedding.check_edge2path(), 'Fail set ' + str(i)
+    
 
     def test_length_embedding_dynamic(self):
-        # note: copied from test_topology_embedding
+        ''' 
+        Tests dynamic programming implementation, with length embedding.
+        '''
+        
         ''' Valid zero length:'''
         self._set_zero_lengths()
         # pass set:
@@ -125,7 +129,9 @@ class Test_Length_Embedding(unittest.TestCase):
         BC_embedding = Embedding.Embedding(self.B, self.C, self.params)
         fail_set = [ BA_embedding, BC_embedding ]
         
+        
         for i, embedding in enumerate(pass_set):
+            pass
             assert embedding.check_topological_embedding_dynamic(), 'Pass set ' + str(i)
             assert embedding.check_vertex2vertex(), 'Pass set ' + str(i)
             assert embedding.check_edge2path(), 'Pass set ' + str(i)
@@ -133,7 +139,8 @@ class Test_Length_Embedding(unittest.TestCase):
             
         for i, embedding in enumerate(fail_set):
             assert not embedding.check_topological_embedding_dynamic(), 'Fail set ' + str(i)
-            
+        
+        
         ''' Valid nonzero length: '''
         self._set_valid_lengths()
         for i, embedding in enumerate(pass_set):
