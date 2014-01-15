@@ -131,7 +131,6 @@ class Test_Length_Embedding(unittest.TestCase):
         
         
         for i, embedding in enumerate(pass_set):
-            pass
             assert embedding.check_topological_embedding_dynamic(), 'Pass set ' + str(i)
             assert embedding.check_vertex2vertex(), 'Pass set ' + str(i)
             assert embedding.check_edge2path(), 'Pass set ' + str(i)

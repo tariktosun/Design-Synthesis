@@ -11,7 +11,7 @@ class Node(object):
     Node class for design merging
     '''
 
-    def __init__(self, name=''):
+    def __init__(self, name):
         '''
         Constructor
         '''

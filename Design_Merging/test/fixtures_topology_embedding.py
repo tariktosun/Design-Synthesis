@@ -13,7 +13,6 @@ def setUpTopologyFixtures(test_object):
     Sets up fixtures for the test class given as arg.
     '''
     # Type subsumption:
-    #valid_types = [1, 2]
     types_subsumed = {1: [1,2], 2: [2]}
     length_scaling = 1
     test_object.params = {'types_subsumed': types_subsumed,

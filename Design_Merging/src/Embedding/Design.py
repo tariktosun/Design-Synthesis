@@ -53,7 +53,8 @@ class Design(object):
         for n in inactive_nodes:
             assert n.is_end_effector == False, 'Attempted to strip an inactive node that was an end effector'
             assert n.children == [], 'Attempted to strip an inactive node that had children'
+            stripped_design.edges.remove(n.parent_edge)
+            stripped_design.nodes.remove(n)
             p = n.parent
             p.remove_child(n)
-            stripped_design.nodes.remove(n)
         return stripped_design

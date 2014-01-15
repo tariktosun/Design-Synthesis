@@ -7,6 +7,8 @@ Created on Dec 30, 2013
 import Design
 from itertools import permutations
 import pandas
+#import sys
+import math
 
 class Embedding(object):
     '''
@@ -307,7 +309,7 @@ class Embedding(object):
         merged_nodemap = dict( merged_nodemap )
         return merged_nodemap
               
-    def check_topological_embedding_brute(self):
+    def check_topological_embedding_brute(self, verbose=False):
         '''
         Brute-force combinatoric method to check topological embedding
         '''
@@ -320,8 +322,16 @@ class Embedding(object):
             # shortcut - fewer nodes in superdesign
             self.AB_nodemap = None
             return False
+        # compute number of matchings:
+        num_matchings = math.factorial(len(self.subD.nodes))*math.factorial(len(self.superD.nodes))
+        count = 0
         for sub_perm in permutations(self.subD.nodes):
             for super_perm in permutations(self.superD.nodes, N):
+                #sys.stdout.write("%d  \r" % count )
+                #sys.stdout.flush()    # carriage returns don't work in Eclipse :-(
+                if verbose:
+                    print str(count) + " / " + str(num_matchings)
+                    count += 1
                 self.AB_nodemap = dict (zip(sub_perm, super_perm))
                 if self.check_vertex2vertex():
                     if self.check_edge2path():
