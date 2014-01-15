@@ -306,8 +306,6 @@ class Embedding(object):
         # convert merged_nodemap to dict:    
         merged_nodemap = dict( merged_nodemap )
         return merged_nodemap
-        
-            
               
     def check_topological_embedding_brute(self):
         '''

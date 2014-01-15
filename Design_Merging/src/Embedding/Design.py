@@ -6,6 +6,7 @@ Created on Dec 29, 2013
 #from Embedding.Node import Node
 
 import Node
+import copy
 
 class Design(object):
     '''
@@ -41,3 +42,18 @@ class Design(object):
         for child in root_node.children:
             self.parse_tree(child, nodes, edges)
         return
+    
+    def strip_inactive_nodes(self):
+        '''
+        Returns a design identical to this one, but with inactive nodes stripped.
+        Note that this does not modify the current Design, it returns a new one.
+        '''
+        stripped_design = copy.deepcopy(self)
+        inactive_nodes = [n for n in stripped_design.nodes if n.active == False]
+        for n in inactive_nodes:
+            assert n.is_end_effector == False, 'Attempted to strip an inactive node that was an end effector'
+            assert n.children == [], 'Attempted to strip an inactive node that had children'
+            p = n.parent
+            p.remove_child(n)
+            stripped_design.nodes.remove(n)
+        return stripped_design

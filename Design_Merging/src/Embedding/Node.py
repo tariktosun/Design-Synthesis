@@ -27,6 +27,9 @@ class Node(object):
         self.type = None
         # Nodes that are end effectors  cannot have children.
         self.is_end_effector = False
+        # Nodes for which active == True are considered in embeddings; inactive
+        # nodes are stripped.
+        self.active = True  # note: inactive nodes must be set as such manually.
     
     def nodecost(self):
         '''
