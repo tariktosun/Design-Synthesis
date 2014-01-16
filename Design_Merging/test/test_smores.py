@@ -9,6 +9,7 @@ import Embedding.Design as Design
 from Embedding import Embedding
 import Embedding.SmoresModule as SmoresModule
 import Embedding.SmoresDesign as SmoresDesign
+from fixtures_grasper_walker import setUpGrasperWalker
 
 class Test_Smores(unittest.TestCase):
 
@@ -86,6 +87,9 @@ class Test_Smores(unittest.TestCase):
         a_smores[1].add_child_module( 3 , a_smores[0] )
         # make a SmoresDesign and store it:
         self.ASmores = SmoresDesign.SmoresDesign( a_smores[1], a_smores )
+
+        ''' Grasper and walker: '''
+        setUpGrasperWalker(self)
 
     def tearDown(self):
         pass
@@ -169,6 +173,37 @@ class Test_Smores(unittest.TestCase):
         
         # only dynamic because brute takes too long to run.
         assert not unstripped_embedding.check_topological_embedding_dynamic()
+        
+    def test_small_walker_grasper(self):
+        '''
+        Tests a smaller version of the walker and grasper.
+        '''
+        stripped_small_grasper = self.grasper_small.strip_inactive_nodes()
+        small_embedding = Embedding.Embedding( self.walker_small, stripped_small_grasper, self.params)
+        
+        # brute:
+        assert small_embedding.check_topological_embedding_brute()
+        assert small_embedding.check_vertex2vertex()
+        assert small_embedding.check_edge2path()
+        assert small_embedding.check_vertex_disjointness()
+        
+        # dynamic:
+        assert small_embedding.check_topological_embedding_dynamic()
+        assert small_embedding.check_vertex2vertex()
+        assert small_embedding.check_edge2path()
+        assert small_embedding.check_vertex_disjointness()
+    
+    def test_walker_grasper(self):
+        '''
+        Tests embedding the grasper design in the walker design.
+        '''
+        stripped_grasper = self.grasper.strip_inactive_nodes()
+        gInW_embedding = Embedding.Embedding( self.walker, stripped_grasper, self.params )
+        
+        assert gInW_embedding.check_topological_embedding_dynamic()
+        assert gInW_embedding.check_vertex2vertex()
+        assert gInW_embedding.check_edge2path()
+        assert gInW_embedding.check_vertex_disjointness()
             
             
         

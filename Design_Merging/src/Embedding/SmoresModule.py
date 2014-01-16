@@ -69,7 +69,8 @@ class SmoresModule(object):
         Adds a child module to this module, connected at specified node number.
         '''
         assert isinstance(child_module, SmoresModule), 'child_module is not a SmoresModule object.'
-        assert node_number is not self.root_node_number, 'Attempted to add child module at root_node_number.'
+        if self.parent_module is not None:
+            assert node_number is not self.root_node_number, 'Attempted to add child module at root_node_number to non-root module.'
         assert self.child_modules[node_number] is None, 'Attempted to add a child to a filled node_number.'
         # add to list of children:
         self.child_modules[node_number] = child_module
