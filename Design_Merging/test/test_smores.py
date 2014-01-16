@@ -192,6 +192,27 @@ class Test_Smores(unittest.TestCase):
         assert small_embedding.check_vertex2vertex()
         assert small_embedding.check_edge2path()
         assert small_embedding.check_vertex_disjointness()
+        
+    def test_even_smaller_walker_grasper(self):
+        '''
+        Make the walker and grasper even smaller.
+        '''
+        stripped_smaller_grasper = self.grasper_smaller.strip_inactive_nodes()
+        small_embedding = Embedding.Embedding( self.walker_smaller, stripped_smaller_grasper, self.params)
+        
+        # brute:
+        assert small_embedding.check_topological_embedding_brute()
+        assert small_embedding.check_vertex2vertex()
+        assert small_embedding.check_edge2path()
+        assert small_embedding.check_vertex_disjointness()
+        
+        # dynamic:
+        assert small_embedding.check_topological_embedding_dynamic()
+        assert small_embedding.check_vertex2vertex()
+        assert small_embedding.check_edge2path()
+        assert small_embedding.check_vertex_disjointness()
+        
+        
     
     def test_walker_grasper(self):
         '''

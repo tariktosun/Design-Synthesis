@@ -23,6 +23,7 @@ def setUpGrasperWalker(test_object):
                  SmoresModule('7', 1, [3,0,2]),
                 ]
     g_small = copy.deepcopy( g_modules )
+    g_smaller = copy.deepcopy( g_modules )
     # The -1's here are to make the code more readable when compared with the
     # original drawings of the designs I made (where modules numbers start at 1
     # rather than 0)
@@ -41,6 +42,10 @@ def setUpGrasperWalker(test_object):
     g_small[5-1].nodes[0].active = False    #need to hack this for it to work.
     grasper_small = SmoresDesign( g_small[1-1], [g_small[1-1], g_small[2-1], g_small[5-1]])
     test_object.grasper_small = grasper_small
+    
+    # ...and an even smaller version:
+    grasper_smaller = SmoresDesign( g_smaller[1-1], [g_smaller[1-1]] )
+    test_object.grasper_smaller = grasper_smaller
     
     ''' Walker design: '''
     w_modules = [SmoresModule('1', 1, [2,3,0] ),
@@ -65,6 +70,7 @@ def setUpGrasperWalker(test_object):
                  ]
     
     w_small = copy.deepcopy( w_modules )
+    w_smaller = copy.deepcopy( w_modules )
     
     # First I am connecting the bottom legs (which will be the grasper)
     # right leg:
@@ -96,7 +102,10 @@ def setUpGrasperWalker(test_object):
     walker_small = SmoresDesign( w_small[11-1], [w_small[11-1], w_small[12-1], w_small[10-1]])
     test_object.walker_small = walker_small
     
-    
+    # ... and an even smaller version:
+    w_smaller[11-1].add_child_module( 1, w_smaller[10-1] )
+    walker_smaller = SmoresDesign( w_smaller[11-1], [ w_smaller[11-1], w_smaller[10-1] ])
+    test_object.walker_smaller = walker_smaller
     
     
     

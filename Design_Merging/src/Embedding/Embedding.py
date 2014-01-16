@@ -272,6 +272,8 @@ class Embedding(object):
             if p.parent is not None:
                 super_path_length += p.parent_edge.length
             p = p.parent
+        if superN.name == '10-0' and subN.name == '1-0':
+            pass
         return
     
     def _find_valid_matching(self, super_children_order, sub_children_order):
