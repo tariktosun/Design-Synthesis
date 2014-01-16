@@ -137,26 +137,26 @@ class Embedding(object):
             ''' base case 2: superN has children, but subN does not.
             Embeds if:
                 (1) subN may embed in a child of superN
-                (2) subN may map to superN
+                (2) subN is not an end-effector, and may map to superN
             '''
-            
-            ''' (1) Does subN embed in a child of superN? '''
+             
             # Recursively ensure that all pairs of subN with children of superN
             # have table entries:
             for superC in superN.children:
                 if self.T[superC][subN] == None:
                     self._embeds(superC, subN)
-            # return True if an embedding in a child was found (and propagated up)
-            #if type(self.T[superN][subN]) == dict:
-            if type(self.T[superN][subN]) == list:
-                return True
             
-            ''' (2) Does subN map to superN? '''
-            
+            ''' (2) Does subN map to superN? '''      
             # functionality and end-effector check:
             if not self.node_subsumes(superN, subN):
-                self.T[superN][subN] = False
-                return False
+                ''' (1) Does subN embed in a child of superN? '''
+                # We may still have an embedding if an embedding in a child was found (and propagated up)
+                #if type(self.T[superN][subN]) == dict:
+                if type(self.T[superN][subN]) == list:
+                    return True
+                else:
+                    self.T[superN][subN] = False
+                    return False
             
             # all tests passed, so we have found a root-matched embedding.
             # all children of superN in this case MUST be unused (subN is a leaf)
@@ -176,16 +176,11 @@ class Embedding(object):
                     and subN may map to superN.
             '''
                   
-            ''' (1) does subN embed in a child of superN? '''
             # Recursively ensure that all pairs of subN with children of superN
             # have table entries:
             for superC in superN.children:
                 if self.T[superC][subN] == None:
                     self._embeds(superC, subN)
-            # return True if an embedding in a child was found (and propagated up)
-            #if type(self.T[superN][subN]) == dict:
-            if type(self.T[superN][subN]) == dict:
-                return True
             
             ''' (2) Can a matching be found between children of subN and superN,
                     and can subN map to superN? ''' 
@@ -198,13 +193,24 @@ class Embedding(object):
             
             # functionality and end-effector check:
             if not self.node_subsumes(superN, subN):
-                return False
+                ''' (1) does subN embed in a child of superN? '''
+                # return True if an embedding in a child was found (and propagated up)
+                if type(self.T[superN][subN]) == list:
+                    return True
+                else:
+                    self.T[superN][subN] = False
+                    return False
             
             # check child matching using brute force enumeration:
             if len(superN.children)<len(subN.children):
                 # if superN has fewer children than subN, vertex-disjoint embedding is impossible.
-                self.T[superN][subN] = False
-                return False
+                ''' (1) does subN embed in a child of superN? '''
+                # return True if an embedding in a child was found (and propagated up)
+                if type(self.T[superN][subN]) == list:
+                    return True
+                else:
+                    self.T[superN][subN] = False
+                    return False
             #brute force search for matching:
             for sub_children_perm in permutations(subN.children):
                 for super_children_perm in permutations(superN.children, len(subN.children)):
@@ -213,23 +219,17 @@ class Embedding(object):
                         # We have found an embedding. Record it and propagate upwards.
                         # add in the parent pairing:
                         merged_nodemap[subN] = superN                        
-                        #                         # Merge nodemaps of all child pairings in table:
-                        #                         nodemap = []
-                        #                         for sup,sub in zip(super_children_perm, sub_children_perm):
-                        #                             child_nodemap = self.T[sup][sub]
-                        #                             nodemap += child_nodemap.items()
-                        #                         nodemap = dict( nodemap )
-                        #                         # add in the parent pairing:
-                        #                         nodemap[subN] = superN                        
-                        #                         self.T[superN][subN] = nodemap
-                        
-                        #self.T[superN][subN] = (0, superN, merged_nodemap)
                         # record and propagate to parents:
                         self._record_and_propagate(superN, subN, merged_nodemap)
                         return True
             # children cannot be matched; embedding fails.
-            self.T[superN][subN] = False
-            return False
+            ''' (1) does subN embed in a child of superN? '''
+            # return True if an embedding in a child was found (and propagated up)
+            if type(self.T[superN][subN]) == list:
+                return True
+            else:
+                self.T[superN][subN] = False
+                return False
     
     def _record_and_propagate(self, superN, subN, nodemap):
         '''
