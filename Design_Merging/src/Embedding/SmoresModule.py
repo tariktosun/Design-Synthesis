@@ -68,13 +68,19 @@ class SmoresModule(object):
         '''
         Adds a child module to this module, connected at specified node number.
         '''
-        assert node_number is not self.parent_node_number, 'Attempted to add child module at parent_node_number.'
+        assert isinstance(child_module, SmoresModule), 'child_module is not a SmoresModule object.'
+        assert node_number is not self.root_node_number, 'Attempted to add child module at root_node_number.'
         assert self.child_modules[node_number] is None, 'Attempted to add a child to a filled node_number.'
         # add to list of children:
         self.child_modules[node_number] = child_module
         # connect root node of child module to specified node of this module:
-        # edge is zero length.
-        self.nodes[node_number].add_child(child_module.nodes[child_module.parent_node_number], 0)
+        # Edge length depends on the kind of nodes involved:
+        length = 0
+        if node_number == 1:
+            length +=1
+        if child_module.root_node_number == 1:
+            length +=1
+        self.nodes[node_number].add_child(child_module.nodes[child_module.root_node_number], length)
         child_module.parent_module = self
         
     def remove_child_module(self, child_module):

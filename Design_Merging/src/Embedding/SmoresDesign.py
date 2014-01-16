@@ -4,7 +4,7 @@ Created on Jan 15, 2014
 @author: tariktosun
 '''
 
-import Design
+from Design import Design
 import SmoresModule
 
 
