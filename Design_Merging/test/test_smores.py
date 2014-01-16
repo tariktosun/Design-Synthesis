@@ -7,12 +7,17 @@ import unittest
 import Embedding.Node as Node
 import Embedding.Design as Design
 from Embedding import Embedding
+import Embedding.SmoresModule as SmoresModule
 
 class Test_Smores(unittest.TestCase):
 
 
     def setUp(self):
-        ''' sets up fixtures. '''
+        '''
+        sets up fixtures.
+        '''
+        
+        ''' Manually created SMORES designs: '''
         # Type subsumption:
         types_subsumed = {1: [1,2], 2: [2]}
         length_scaling = 1
@@ -65,6 +70,13 @@ class Test_Smores(unittest.TestCase):
             e.length = 1
         a[3].parent_edge.length = 0
         
+        ''' The same designs, but made using the SmoresModule class: '''
+        b_smores = [ SmoresModule.SmoresModule('0',0), SmoresModule.SmoresModule('1',1) ]
+        # build structure:
+        b_smores[0].add_child_module( 1, b[1] )
+        # make a normal design out of the :
+        
+        
 
     def tearDown(self):
         pass
@@ -106,6 +118,13 @@ class Test_Smores(unittest.TestCase):
         # dynamic:
         #print "beginning unstripped dynamic"
         assert not unstripped_embedding.check_topological_embedding_dynamic()
+        
+        #     def test smores_class_basic(self):
+        #         '''
+        #         Basic test of the smores class.  Tests for equality with the manually
+        #         created designs by checking that each embeds the other.
+        #         '''
+        #         pass
         
 
 

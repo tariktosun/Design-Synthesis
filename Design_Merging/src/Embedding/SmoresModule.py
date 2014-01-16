@@ -21,7 +21,7 @@ class SmoresModule(object):
     '''
 
 
-    def __init__(self, name, root_node_number, inactive_nodes_numbers):
+    def __init__(self, name, root_node_number, inactive_nodes_numbers=[]):
         '''
         Constructor.  root_node is a number (0-3) specifying which node in this
         module is the root.  inactive_nodes is a list of numbers (again, 0-3)
