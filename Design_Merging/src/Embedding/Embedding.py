@@ -126,19 +126,12 @@ class Embedding(object):
             
             # functionality and end-effector check:
             if not self.node_subsumes(superN, subN):
+                self.T[superN][subN] = False
                 return False
             
             # We have found an embedding. Record it and propagate upwards:
             nodemap = {subN:superN}
-            self._record_and_propagate(superN, subN, nodemap)
-            
-            #             nodemap = {subN:superN}
-            #             self.T[superN][subN] = nodemap
-            #             p = superN.parent
-            #             while p is not None:
-            #                 self.T[p][subN] = nodemap
-            #                 p = p.parent
-            
+            self._record_and_propagate(superN, subN, nodemap)            
             return True
         elif subN.children == []:
             ''' base case 2: superN has children, but subN does not.
@@ -162,21 +155,13 @@ class Embedding(object):
             
             # functionality and end-effector check:
             if not self.node_subsumes(superN, subN):
+                self.T[superN][subN] = False
                 return False
             
             # all tests passed, so we have found a root-matched embedding.
             # all children of superN in this case MUST be unused (subN is a leaf)
             nodemap = {subN:superN}
             self._record_and_propagate(superN, subN, nodemap)
-            
-            #             self.T[superN][subN] = nodemap
-            #             # propagate to parents:
-            #             p = superN.parent
-            #             while p is not None:
-            #                 self.T[p][subN] = nodemap
-            #                 p = p.parent
-            
-            #return
             return True
         elif superN.children == []:
             ''' if superN has no children but subN has children, superN cannot
@@ -241,12 +226,6 @@ class Embedding(object):
                         #self.T[superN][subN] = (0, superN, merged_nodemap)
                         # record and propagate to parents:
                         self._record_and_propagate(superN, subN, merged_nodemap)
-                        
-                        #                         p = superN.parent
-                        #                         while p is not None:
-                        #                             self.T[p][subN] = nodemap
-                        #                             p = p.parent
-                        #                         return True
                         return True
             # children cannot be matched; embedding fails.
             self.T[superN][subN] = False
