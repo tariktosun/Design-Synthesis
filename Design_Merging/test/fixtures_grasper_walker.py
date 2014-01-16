@@ -17,7 +17,7 @@ def setUpGrasperWalker(test_object):
     g_modules = [SmoresModule('1', 0, []),
                  SmoresModule('2', 1, [3,2]),
                  SmoresModule('3', 1, [3,2]),
-                 SmoresModule('3', 1, [3,0,2]),
+                 SmoresModule('4', 1, [3,0,2]),
                  SmoresModule('5', 1, [3,2]),
                  SmoresModule('6', 1, [3,2]),
                  SmoresModule('7', 1, [3,0,2]),
