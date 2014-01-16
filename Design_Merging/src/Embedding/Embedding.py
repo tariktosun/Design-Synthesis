@@ -116,7 +116,8 @@ class Embedding(object):
         Recursive function testing subtree embedding.
         '''
         # This function should not be called more than once for a pairing.
-        assert self.T[superN][subN] is None, 'Attempted to call _embeds on a filled table entry.'
+        #assert self.T[superN][subN] is None, 'Attempted to call _embeds on a filled table entry.'
+        # not actually true!!!
         
         if superN.children == [] and subN.children == []:
             ''' base case 1: nodes with no children.
@@ -142,9 +143,7 @@ class Embedding(object):
              
             # Recursively ensure that all pairs of subN with children of superN
             # have table entries:
-            for superC in superN.children:
-                if self.T[superC][subN] == None:
-                    self._embeds(superC, subN)
+            self._ensure_rooted_entries(superN, subN)
             
             ''' (2) Does subN map to superN? '''      
             # functionality and end-effector check:
@@ -178,18 +177,22 @@ class Embedding(object):
                   
             # Recursively ensure that all pairs of subN with children of superN
             # have table entries:
-            for superC in superN.children:
-                if self.T[superC][subN] == None:
-                    self._embeds(superC, subN)
+            self._ensure_rooted_entries(superN, subN)
+            #             for superC in superN.children:
+            #                 if self.T[superC][subN] == None:
+            #                     self._embeds(superC, subN)
             
             ''' (2) Can a matching be found between children of subN and superN,
                     and can subN map to superN? ''' 
             # Recursively ensure that all child pairings have table entries:
-            for superC in superN.children:
-                for subC in subN.children:
-                    if self.T[superC][subC] == None:
-                        #self.T[superC][subC] = self._embeds(superC, subC)
-                        self._embeds(superC, subC)
+            for subC in subN.children:
+                self._ensure_rooted_entries(superN, subC)
+            
+            #             for superC in superN.children:
+            #                 for subC in subN.children:
+            #                     if self.T[superC][subC] == None:
+            #                         #self.T[superC][subC] = self._embeds(superC, subC)
+            #                         self._embeds(superC, subC)
             
             # functionality and end-effector check:
             if not self.node_subsumes(superN, subN):
@@ -230,6 +233,28 @@ class Embedding(object):
             else:
                 self.T[superN][subN] = False
                 return False
+            
+    def _ensure_rooted_entries(self, superN, subN):
+            '''
+            Ensures that a rooted table entry for subN and each of superN's
+            children exists in the table.  If an entry does not exist yet, 
+            _embeds is called with those nodes in order to create one.
+            '''
+            for superC in superN.children:
+                if self.T[superC][subN] == None:
+                    self._embeds(superC, subN)
+                elif self.T[superN][subN] == False:
+                    continue
+                elif type(self.T[superC][subN]) == list:
+                    # find an embedding rooted at superC and subN
+                    for mapping in self.T[superC][subN]:
+                        #length = mapping[0]
+                        root = mapping[1]
+                        #nodemap = mapping[2]
+                        if root == superC:
+                            break   # rooted entry found
+                    else:   # no rooted embedding found
+                        self._embeds(superC, subN)
     
     def _record_and_propagate(self, superN, subN, nodemap):
         '''
@@ -251,8 +276,8 @@ class Embedding(object):
             if p.parent is not None:
                 super_path_length += p.parent_edge.length
             p = p.parent
-        if superN.name == '10-0' and subN.name == '1-0':
-            pass
+            if superN.name == '11-3' and subN.name == '1-3':
+                pass
         return
     
     def _find_valid_matching(self, super_children_order, sub_children_order):

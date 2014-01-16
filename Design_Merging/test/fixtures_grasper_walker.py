@@ -38,9 +38,10 @@ def setUpGrasperWalker(test_object):
     
     # now make a smaller version:
     g_small[1-1].add_child_module( 2, g_small[5-1] )
-    g_small[1-1].add_child_module( 3, g_small[2-1] )
+    #g_small[1-1].add_child_module( 3, g_small[2-1] )
     g_small[5-1].nodes[0].active = False    #need to hack this for it to work.
-    grasper_small = SmoresDesign( g_small[1-1], [g_small[1-1], g_small[2-1], g_small[5-1]])
+    #grasper_small = SmoresDesign( g_small[1-1], [g_small[1-1], g_small[2-1], g_small[5-1]])
+    grasper_small = SmoresDesign( g_small[1-1], [g_small[1-1], g_small[5-1]])
     test_object.grasper_small = grasper_small
     
     # ...and an even smaller version:
