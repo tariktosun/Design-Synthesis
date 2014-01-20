@@ -84,7 +84,7 @@ def setUpGrasperWalker(test_object):
     w_modules[9-1].add_child_module( 1, w_modules[8-1] )
     # now for the top two legs:
     #right leg:
-    w_modules[11-1].add_child_module( 3, w_modules[4-1] )
+    w_modules[11-1].add_child_module( 2, w_modules[4-1] )
     # Note that above is allowed because 11 is the root module.
     w_modules[4-1].add_child_module( 0, w_modules[3-1] )
     w_modules[3-1].add_child_module( 0, w_modules[2-1] )

@@ -42,6 +42,31 @@ class Embedding(object):
         self.T = { superN:{ subN:None for subN in self.subD.nodes } 
                   for superN in self.superD.nodes }  
         self.AB_nodemap = nodemap
+        # check validity before returning.
+        self.check_validity()
+        
+    def check_validity(self):
+        '''
+        Checks the validity of this Embedding. Throws assertion error if it fails,
+        runs silently otherwise.
+        '''
+        self.superD.check_validity()
+        self.subD.check_validity()
+        # check that types_subsumed is consistent:
+        for t in self.types_subsumed.keys():
+            subsumed_types = self.types_subsumed[t]
+            # Type must subsume itself:
+            assert t in subsumed_types, 'Invalid types_subsumed.'
+            # any type subsumed must also be in the dict as a key:
+            for s in subsumed_types:
+                assert self.types_subsumed.has_key(s), 'Invalid types_subsumed'
+        # check that designs include only types in the table:
+        for n in self.superD.nodes:
+            assert self.types_subsumed.has_key(n.type), 'A node has an invalid type.'
+        for n in self.subD.nodes:
+            assert self.types_subsumed.has_key(n.type), 'A node has an invalid type.'
+            
+        
         
     def pretty_nodemap(self, nodemap=-1):
         '''
