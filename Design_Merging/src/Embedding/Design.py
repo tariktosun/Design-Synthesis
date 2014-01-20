@@ -33,9 +33,9 @@ class Design(object):
         
     def parse_tree(self, root_node, nodes, edges):
         '''
-        Extracts all nodes and edges from a connected set of nodes.
+        Recursive function which extracts all nodes and edges from a connected set of nodes.
         '''
-        assert not root_node in nodes, "Design tree is invalid."
+        assert not root_node in nodes, "Design tree contains a cycle."
         nodes.append(root_node)
         if root_node.parent_edge:
             edges.append(root_node.parent_edge)
@@ -58,3 +58,54 @@ class Design(object):
             p = n.parent
             p.remove_child(n)
         return stripped_design
+    
+    def check_validity(self):
+        '''
+        Checks a number of conditions to ensure that this design is a valid design.
+        Throws assertion error if design fails, runs silently otherwise.
+        '''
+        # ensure that design contains no cycles, and that list of nodes and edges
+        # correspond to those actually connected to the root.
+        nodes = []
+        edges = []
+        self.parse_tree(self.root_node, nodes, edges)
+        assert set(self.nodes) == set(nodes), 'Mismatch in tree and node list'
+        assert set(self.edges) == set(edges), 'Mismatch in tree and edge list'
+        
+        # ensure all edges have non-negative lengths, and that edge parents and
+        # children correspond with the nodes they connect.
+        for e in self.edges:
+            assert e.length >= 0, 'An edge has negative length'
+            assert e.child.parent == e.parent, 'Edge child parent is not edge parent.'
+            assert e.child.parent_edge == e, 'Edge child\'s parent edge is not this edge.'
+            
+        # Check nodes:
+        for n in self.nodes:
+            if n.parent is not None:    # root has no parent.
+                assert n in n.parent.children, 'node is not a child of its parent'
+            for c in n.children:
+                assert c.parent == n, 'node is not the parent of its child'
+            if n.active == False:
+                assert n.is_end_effector == False, 'An Inactive node is an end-effector'
+                try:
+                    assert n.children == [], 'An Inactive node has children.'
+                except:
+                    pass
+            if n.is_end_effector:
+                assert n.children == [], 'An End-effector has children.'
+            
+            
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
