@@ -10,6 +10,7 @@ from Embedding import Embedding
 import Embedding.SmoresModule as SmoresModule
 import Embedding.SmoresDesign as SmoresDesign
 from fixtures_grasper_walker import setUpGrasperWalker
+# foo bar foo bar
 
 class Test_Smores(unittest.TestCase):
 
