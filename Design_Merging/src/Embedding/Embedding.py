@@ -381,7 +381,7 @@ class Embedding(object):
         Returns true if the path to which edge argument maps satisfies the
         kinematic matching condition, and false otherwise. 
         '''
-        
+         
         # extract chains and angles:
         (sub_chain, sub_angles) = self.subD.get_kinematics( edge.parent, edge.child )
         (super_chain, super_angles) = self.superD.get_kinematic_chain( nodemap(edge.parent), nodemap(edge.child))
@@ -453,7 +453,8 @@ class Embedding(object):
                 super_path_length += p.parent_edge.length
                 p = p.parent
             
-            ''' Length check is no longer valid now that we have kinematics.
+            '''
+            # Length check is no longer valid now that we have kinematics.
             # length check:
             if not super_path_length == (edge.length * self.length_scaling):
                 return False
@@ -461,6 +462,7 @@ class Embedding(object):
             # check kinematics:
             if not self.check_edge_kinematics(edge, nodemap):
                 return False
+            
         return True
             
     def check_vertex_disjointness(self):
