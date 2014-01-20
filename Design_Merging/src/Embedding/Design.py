@@ -7,6 +7,9 @@ Created on Dec 29, 2013
 
 import Node
 import copy
+import roslib
+roslib.load_manifest('kdl')
+from PyKDL import *
 
 class Design(object):
     '''

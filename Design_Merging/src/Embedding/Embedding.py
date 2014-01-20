@@ -9,6 +9,10 @@ from itertools import permutations
 import pandas
 #import sys
 import math
+# PyKDL:
+import roslib
+roslib.load_manifest('kdl')
+from PyKDL import * 
 
 class Embedding(object):
     '''
@@ -346,7 +350,26 @@ class Embedding(object):
         # no embedding found.
         self.AB_nodemap = None
         return False
+    
+    def check_edge_kinematics(self, edge, nodemap):
+        '''
+        Returns true if the path to which edge argument maps satisfies the
+        kinematic matching condition, and false otherwise. 
+        '''
         
+        # extract chains and angles:
+        (sub_chain, sub_angles) = self.subD.get_kinematics( edge.parent, edge.child )
+        (super_chain, super_angles) = self.superD.get_kinematic_chain( nodemap(edge.parent), nodemap(edge.child))
+        # Check that end positions match:
+        sub_fk = ChainFkSolverPos_recursive( sub_chain )
+        super_fk = ChainFkSolverPos_recursive( super_chain )
+        sub_finalFrame = Frame()
+        super_finalFrame = Frame()
+        sub_fk.JntToCart( sub_angles, sub_finalFrame )
+        super_fk.JntToCart( super_angles, super_finalFrame )
+        return sub_finalFrame == super_finalFrame
+        
+    
     def check_vertex2vertex(self):
         ''' 
         Returns True if AB_nodemap satisfies vertex to vertex correspondence with A
@@ -403,15 +426,15 @@ class Embedding(object):
                 if p.parent is None:
                     return False    # design root reached
                 super_path_length += p.parent_edge.length
-                p = p.parent   
-            #             p = super_child.parent
-            #             while p is not super_parent:
-            #                 if p is None:
-            #                     return False    # root reached
-            #                 super_path_length += p.parent_edge.length
-            #                 p = p.parent
+                p = p.parent
+            
+            ''' Length check is no longer valid now that we have kinematics.
             # length check:
             if not super_path_length == (edge.length * self.length_scaling):
+                return False
+            '''
+            # check kinematics:
+            if not self.check_edge_kinematics(edge, nodemap):
                 return False
         return True
             
