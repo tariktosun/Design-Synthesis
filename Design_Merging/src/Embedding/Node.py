@@ -11,7 +11,7 @@ class Node(object):
     Node class for design merging
     '''
 
-    def __init__(self, name):
+    def __init__(self, name, JointType=Joint.None):
         '''
         Constructor
         '''
@@ -30,6 +30,11 @@ class Node(object):
         # Nodes for which active == True are considered in embeddings; inactive
         # nodes are stripped.
         self.active = True  # note: inactive nodes must be set as such manually.
+        
+        ## Kinematic stuff:
+        self.Joint = Joint( JointType )
+        self.current_angle = 0
+        self.child_edges = []
     
     def nodecost(self):
         '''

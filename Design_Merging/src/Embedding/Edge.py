@@ -12,7 +12,7 @@ class Edge(object):
     '''
 
 
-    def __init__(self, parent, child, length):
+    def __init__(self, parent, child, length, frame):
         '''
         parent and child are Nodes.
         '''
@@ -25,3 +25,7 @@ class Edge(object):
         self.child = child
         # Edge length
         self.length = length
+        
+        ## Kinematic stuff:
+        assert frame.p.Norm() == length, 'Length and frame vector norm are not the same.'
+        self.frame = frame

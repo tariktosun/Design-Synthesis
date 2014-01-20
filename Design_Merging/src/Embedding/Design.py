@@ -62,6 +62,53 @@ class Design(object):
             p.remove_child(n)
         return stripped_design
     
+    def get_kinematics(self, parent_node, child_node):
+        '''
+        Returns (chain, jointAngles), where chain is a KDL chain corresponding 
+        to the path between parent_node and child_node, and jointAngles is a
+        KDL JntArray object with the current angles of the joints along the chain.
+        '''
+        # produce a stack of joints, a stack of frames, and a stack of angles.
+        frame_stack = []
+        joint_stack = []
+        angles_stack = []
+        # Append initial rotation as a None joint:
+        joint_stack.append( Joint.None )
+        # TODO: fill me in. frame_stack.append(  )
+        p = child_node
+        while p is not super_parent:
+            if p.parent is None:
+                return False    # design root reached
+            super_path_length += p.parent_edge.length
+            frame_stack.append( p.parent_edge.frame )
+            p = p.parent
+            joint_stack.append( p.joint )
+            if p.joint.getType() is not 0:
+                angles_stack.append(p.current_angle)
+        # Now append initial rotation:
+        joint_stack.append( Joint.None )
+        # TODO: fill me in. frame_stack.append(  )
+        
+        jointAngles = JntArray( len(angles_stack) )
+        chain = Chain()
+        # Pop off the stack to populate chain and jointAngles:
+        i = 0
+        while len(joint_stack) > 0:
+            joint = joint_stack.pop()
+            frame = frame_stack.pop()
+            if joint.getType() is not 0:
+                angle = angles_stack.pop()
+            jointAngles[i] = angle
+            i += 1
+            segment = Segment( joint, frame )
+            chain.addsegment( segment )
+        assert len(angles_stack) == 0
+        assert len(frame_stack) == 0
+        assert chain.getNrOfJoints() == jointAngles.rows()
+        return (chain, jointAngles)
+            
+        
+    
     def check_validity(self):
         '''
         Checks a number of conditions to ensure that this design is a valid design.
