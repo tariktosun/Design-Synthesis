@@ -122,7 +122,25 @@ class Design(object):
         assert chain.getNrOfJoints() == jointAngles.rows()
         return (chain, jointAngles)
             
-        
+    def set_path_angles(self, parent_node, child_node, angles_array):
+        '''
+        Sets the current_angle of nodes along the path from parent to child to
+        the angles specified in angles_array.
+        '''
+        # angle of child_node will be on top.
+        angles_stack = [ angles_array[i] for i in angles_array ]
+        p = child_node
+        assert p.parent is not None, 'Design root reached'
+        p = p.parent    # we don't set the angle of the child node.
+        while p is not parent_node:
+            assert p.parent is not None, 'Design root reached'
+            angle = angles_stack.pop()
+            p.current_angle = angle
+            p = p.parent
+        # We do set the angle of the parent node:    
+        angle = angles_stack.pop()
+        p.current_angle = angle
+        return
     
     def check_validity(self):
         '''

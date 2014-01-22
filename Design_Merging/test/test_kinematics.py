@@ -77,11 +77,15 @@ class Test_Kinematics(unittest.TestCase):
         Tests brute-force function for embedding detection:
         '''
         AB_embedding = Embedding.Embedding(self.A, self.B, self.params)
-        
+        # Set angle incorrectly:
+        self.A.nodes[1].current_angle = radians(10)
         pass_set = [ AB_embedding ]
         
         for i, embedding in enumerate(pass_set):
-            assert embedding.check_embedding_brute(), 'Pass set ' + str(i)
+            assert embedding.check_kinematic_embedding_brute(), 'Pass set ' + str(i)
+            assert embedding.check_vertex2vertex(), 'Pass set ' + str(i)
+            assert embedding.check_edge2path(), 'Pass set ' + str(i)
+            assert embedding.check_vertex_disjointness(), 'Pass set ' + str(i)
                     
 
 if __name__ == "__main__":
