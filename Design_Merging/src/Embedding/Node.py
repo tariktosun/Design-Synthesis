@@ -4,6 +4,9 @@ Created on Dec 28, 2013
 @author: tariktosun
 '''
 #from Embedding.Edge import Edge
+import roslib
+roslib.load_manifest('kdl')
+from PyKDL import *
 from Edge import Edge
 
 class Node(object):
@@ -11,7 +14,7 @@ class Node(object):
     Node class for design merging
     '''
 
-    def __init__(self, name, JointType=Joint.None):
+    def __init__(self, name, node_joint):
         '''
         Constructor
         '''
@@ -32,7 +35,7 @@ class Node(object):
         self.active = True  # note: inactive nodes must be set as such manually.
         
         ## Kinematic stuff:
-        self.Joint = Joint( JointType )
+        self.joint = node_joint # should be a KDL Joint object.
         self.current_angle = 0
         self.child_edges = []
     
@@ -42,13 +45,14 @@ class Node(object):
         '''
         pass
     
-    def add_child(self, child, length=0):
+    def add_child(self, child, frame):
         '''
         Builds an edge of specified length from child to this node, making it a
         child of this node.
         '''
+        # def add_child(self, child, length=0):
         self.children.append(child)
-        e = Edge(self, child, length)
+        e = Edge(self, child, frame)
         child.parent = self
         child.parent_edge = e
         return

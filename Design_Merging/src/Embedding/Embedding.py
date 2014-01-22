@@ -344,9 +344,41 @@ class Embedding(object):
         merged_nodemap = dict( merged_nodemap )
         return merged_nodemap
               
-    def check_topological_embedding_brute(self, verbose=False):
+    #     def check_topological_embedding_brute(self, verbose=False):
+    #         '''
+    #         Brute-force combinatoric method to check topological embedding
+    #         '''
+    #         # Clear table and nodemap:
+    #         self.T = { superN:{ subN:None for subN in self.subD.nodes } 
+    #                   for superN in self.superD.nodes }  
+    #         self.AB_nodemap = None
+    #         N = len(self.subD.nodes) # number of subdesign nodes
+    #         if len(self.superD.nodes) < N:
+    #             # shortcut - fewer nodes in superdesign
+    #             self.AB_nodemap = None
+    #             return False
+    #         # compute number of matchings:
+    #         num_matchings = math.factorial(len(self.subD.nodes))*math.factorial(len(self.superD.nodes))
+    #         count = 0
+    #         for sub_perm in permutations(self.subD.nodes):
+    #             for super_perm in permutations(self.superD.nodes, N):
+    #                 #sys.stdout.write("%d  \r" % count )
+    #                 #sys.stdout.flush()    # carriage returns don't work in Eclipse :-(
+    #                 if verbose:
+    #                     print str(count) + " / " + str(num_matchings)
+    #                     count += 1
+    #                 self.AB_nodemap = dict (zip(sub_perm, super_perm))
+    #                 if self.check_vertex2vertex():
+    #                     if self.check_edge2path():
+    #                         if self.check_vertex_disjointness():
+    #                             return True
+    #         # no embedding found.
+    #         self.AB_nodemap = None
+    #         return False
+    
+    def check_kinematic_embedding_brute(self, verbose=False):
         '''
-        Brute-force combinatoric method to check topological embedding
+        Brute-force combinatoric method to check kinematic embedding
         '''
         # Clear table and nodemap:
         self.T = { superN:{ subN:None for subN in self.subD.nodes } 
@@ -384,7 +416,7 @@ class Embedding(object):
          
         # extract chains and angles:
         (sub_chain, sub_angles) = self.subD.get_kinematics( edge.parent, edge.child )
-        (super_chain, super_angles) = self.superD.get_kinematic_chain( nodemap(edge.parent), nodemap(edge.child))
+        (super_chain, super_angles) = self.superD.get_kinematics( nodemap[edge.parent], nodemap[edge.child])
         # Check that end positions match:
         sub_fk = ChainFkSolverPos_recursive( sub_chain )
         super_fk = ChainFkSolverPos_recursive( super_chain )
@@ -444,13 +476,15 @@ class Embedding(object):
             # find a path that connects super_child to super_parent. Add up all
             # edge lengths along that path.
             super_child = nodemap[edge.child]
-            super_path_length = 0
+            #super_path_length = 0
             
+            # Note: Traversal still required to check that there is a path from 
+            # child to parent.
             p = super_child
             while p is not super_parent:
                 if p.parent is None:
                     return False    # design root reached
-                super_path_length += p.parent_edge.length
+                #super_path_length += p.parent_edge.length
                 p = p.parent
             
             '''

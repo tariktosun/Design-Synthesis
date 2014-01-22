@@ -10,6 +10,7 @@ import copy
 import roslib
 roslib.load_manifest('kdl')
 from PyKDL import *
+from math import pi
 
 class Design(object):
     '''
@@ -72,36 +73,50 @@ class Design(object):
         frame_stack = []
         joint_stack = []
         angles_stack = []
-        # Append initial rotation as a None joint:
-        joint_stack.append( Joint.None )
-        # TODO: fill me in. frame_stack.append(  )
+        # Append final rotation for child as a None joint:
+        joint_stack.append( Joint(Joint.None) )
+        child_node_type = child_node.joint.getType()
+        if child_node_type == Joint.RotX: #X
+            frame_stack.append( Frame( Rotation.Identity ) )
+        elif child_node_type == Joint.RotY: #Y
+            frame_stack.append( Frame( Rotation.RPY(0, 0, pi/2) ) )
+        elif child_node_type == Joint.RotZ: #Z
+            frame_stack.append( Frame( Rotation.RPY(0, -pi/2, 0) ) )
         p = child_node
-        while p is not super_parent:
+        while p is not parent_node:
             if p.parent is None:
                 return False    # design root reached
-            super_path_length += p.parent_edge.length
             frame_stack.append( p.parent_edge.frame )
             p = p.parent
             joint_stack.append( p.joint )
-            if p.joint.getType() is not 0:
+            if not p.joint.getType() == Joint.None:
                 angles_stack.append(p.current_angle)
-        # Now append initial rotation:
-        joint_stack.append( Joint.None )
-        # TODO: fill me in. frame_stack.append(  )
+        # Now append initial rotation for parent:
+        joint_stack.append( Joint(Joint.None) )
+        parent_node_type = parent_node.joint.getType()
+        if parent_node_type == Joint.RotX: #X
+            frame_stack.append( Frame( Rotation.Identity ) )
+        if parent_node_type == Joint.RotY: #Y
+            frame_stack.append( Frame( Rotation.RPY(0,0,-pi/2) ) )
+        if parent_node_type == Joint.RotZ: #Z
+            frame_stack.append( Frame( Rotation.RPY(0,pi/2,0) ) )
         
+        # Pop off the stack to populate chain and jointAngles:
         jointAngles = JntArray( len(angles_stack) )
         chain = Chain()
-        # Pop off the stack to populate chain and jointAngles:
         i = 0
         while len(joint_stack) > 0:
             joint = joint_stack.pop()
             frame = frame_stack.pop()
-            if joint.getType() is not 0:
-                angle = angles_stack.pop()
-            jointAngles[i] = angle
-            i += 1
+            if not joint.getType() == Joint.None:
+                try:
+                    angle = angles_stack.pop()
+                except:
+                    pass
+                jointAngles[i] = angle
+                i += 1
             segment = Segment( joint, frame )
-            chain.addsegment( segment )
+            chain.addSegment( segment )
         assert len(angles_stack) == 0
         assert len(frame_stack) == 0
         assert chain.getNrOfJoints() == jointAngles.rows()
@@ -125,7 +140,8 @@ class Design(object):
         # ensure all edges have non-negative lengths, and that edge parents and
         # children correspond with the nodes they connect.
         for e in self.edges:
-            assert e.length >= 0, 'An edge has negative length'
+            #assert e.length >= 0, 'An edge has negative length'
+            # edges no longer have length.
             assert e.child.parent == e.parent, 'Edge child parent is not edge parent.'
             assert e.child.parent_edge == e, 'Edge child\'s parent edge is not this edge.'
             
