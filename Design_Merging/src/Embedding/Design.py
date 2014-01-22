@@ -73,15 +73,18 @@ class Design(object):
         frame_stack = []
         joint_stack = []
         angles_stack = []
-        # Append final rotation for child as a None joint:
-        joint_stack.append( Joint(Joint.None) )
+        # Append child with Identity frame:
+        #joint_stack.append( Joint(Joint.None) )
+        joint_stack.append( child_node.joint )
+        #frame_stack.append( Frame( Rotation.Identity() )) wrong.    
         child_node_type = child_node.joint.getType()
         if child_node_type == Joint.RotX: #X
-            frame_stack.append( Frame( Rotation.Identity ) )
+            frame_stack.append( Frame( Rotation.Identity() ) )
         elif child_node_type == Joint.RotY: #Y
             frame_stack.append( Frame( Rotation.RPY(0, 0, pi/2) ) )
         elif child_node_type == Joint.RotZ: #Z
             frame_stack.append( Frame( Rotation.RPY(0, -pi/2, 0) ) )
+        angles_stack.append( child_node.current_angle )
         p = child_node
         while p is not parent_node:
             if p.parent is None:
@@ -109,10 +112,7 @@ class Design(object):
             joint = joint_stack.pop()
             frame = frame_stack.pop()
             if not joint.getType() == Joint.None:
-                try:
-                    angle = angles_stack.pop()
-                except:
-                    pass
+                angle = angles_stack.pop()
                 jointAngles[i] = angle
                 i += 1
             segment = Segment( joint, frame )
@@ -128,10 +128,10 @@ class Design(object):
         the angles specified in angles_array.
         '''
         # angle of child_node will be on top.
-        angles_stack = [ angles_array[i] for i in angles_array ]
+        angles_stack = [ angles_array[i] for i in xrange(angles_array.rows()) ]
         p = child_node
-        assert p.parent is not None, 'Design root reached'
-        p = p.parent    # we don't set the angle of the child node.
+        #assert p.parent is not None, 'Design root reached'
+        #p = p.parent    # we don't set the angle of the child node.
         while p is not parent_node:
             assert p.parent is not None, 'Design root reached'
             angle = angles_stack.pop()

@@ -65,6 +65,7 @@ class Embedding(object):
             assert self.types_subsumed.has_key(n.type), 'A node has an invalid type.'
         for n in self.subD.nodes:
             assert self.types_subsumed.has_key(n.type), 'A node has an invalid type.'
+        # checks that 
             
         
         
@@ -123,22 +124,27 @@ class Embedding(object):
                 return False
         return True    
         
-    def check_topological_embedding_dynamic(self):
+    #     def check_topological_embedding_dynamic(self):
+    #         '''
+    #         Check topological embedding using dynamic programming algorithm.
+    #         '''
+    #         # Clear table and nodemap:
+    #         self.T = { superN:{ subN:None for subN in self.subD.nodes } 
+    #                   for superN in self.superD.nodes }  
+    #         self.AB_nodemap = None
+    #         boolean_result = self._embeds(self.superD.root_node, self.subD.root_node)
+    #         if boolean_result:
+    #             # take the first valid embedding stored at the root.
+    #             (_, _, nodemap) = self.T[self.superD.root_node][self.subD.root_node][0]
+    #             self.AB_nodemap = nodemap
+    #         else:
+    #             self.AB_nodemap = False
+    #         return boolean_result
+    
+    def check_kinematic_embedding_dynamic(self):
         '''
-        Check topological embedding using dynamic programming algorithm.
+        Check kinematic embedding using dynamic programming algorithm.
         '''
-        # Clear table and nodemap:
-        self.T = { superN:{ subN:None for subN in self.subD.nodes } 
-                  for superN in self.superD.nodes }  
-        self.AB_nodemap = None
-        boolean_result = self._embeds(self.superD.root_node, self.subD.root_node)
-        if boolean_result:
-            # take the first valid embedding stored at the root.
-            (_, _, nodemap) = self.T[self.superD.root_node][self.subD.root_node][0]
-            self.AB_nodemap = nodemap
-        else:
-            self.AB_nodemap = False
-        return boolean_result
         
     def _embeds(self, superN, subN):
         '''
@@ -424,7 +430,28 @@ class Embedding(object):
         super_finalFrame = Frame()
         sub_fk.JntToCart( sub_angles, sub_finalFrame )
         super_fk.JntToCart( super_angles, super_finalFrame )
-        return sub_finalFrame == super_finalFrame
+        # test approximate equality:
+        return self._frames_nearly_equal(sub_finalFrame, super_finalFrame)
+        #return sub_finalFrame == super_finalFrame
+
+    def _frames_nearly_equal(self, frameA, frameB, tol=0.005):
+        ''' Evaluates near-equality of two frames.  Checks a proportional squared sum of errors. '''
+        Ap = list(frameA.p)
+        Bp = list(frameB.p)
+        Aux = list(frameA.M.UnitX())
+        Auy = list(frameA.M.UnitY())
+        Auz = list(frameA.M.UnitZ())
+        Bux = list(frameB.M.UnitX())
+        Buy = list(frameB.M.UnitY())
+        Buz = list(frameB.M.UnitZ())
+        Alist = Ap + Aux + Auy + Auz
+        Blist = Bp + Bux + Buy + Buz
+        sse = 0.0
+        frame_a_norm = 0.0
+        for a,b in zip(Alist, Blist):
+            sse += (a-b)**2
+            frame_a_norm += a**2
+        return (sse / frame_a_norm) <= tol
     
     def check_edge_IK(self, edge, super_parent, super_child):
         '''
