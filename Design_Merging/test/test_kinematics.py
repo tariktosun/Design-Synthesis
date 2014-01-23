@@ -49,6 +49,14 @@ class Test_Kinematics(unittest.TestCase):
         e = [ Node.Node(str(i), Joint(Joint.RotZ)) for i in xrange(3)]
         for i in xrange(len(e)):
             e[i].type = 2
+        #
+        f = [ Node.Node(str(i), Joint(Joint.RotZ)) for i in xrange(3)]
+        for i in xrange(len(f)):
+            f[i].type = 2
+        #
+        g = [ Node.Node(str(i), Joint(Joint.RotZ)) for i in xrange(5) ]
+        for i in xrange(len(g)):
+            g[i].type = 2
         
         # build structure, with Frames:
         b[0].add_child(b[1], Frame( Rotation.Identity(), Vector(2.0, 0, 0) ))
@@ -63,6 +71,14 @@ class Test_Kinematics(unittest.TestCase):
         #
         e[0].add_child(e[1], Frame( Rotation.Identity(), Vector(3.0, 0, 0) ))
         e[1].add_child(e[2], Frame( Rotation.Identity(), Vector(3.0, 0, 0) ))
+        #
+        f[0].add_child(f[1], Frame( Rotation.Identity(), Vector(2.0, 0, 0) ))
+        f[1].add_child(f[2], Frame( Rotation.Identity(), Vector(2.0, 0, 0) ))
+        #
+        g[0].add_child(g[1], Frame( Rotation.Identity(), Vector(3.0, 0, 0) ))
+        g[1].add_child(g[2], Frame( Rotation.Identity(), Vector(3.0, 0, 0) ))
+        g[2].add_child(g[3], Frame( Rotation.Identity(), Vector(3.0, 0, 0) ))
+        g[3].add_child(g[4], Frame( Rotation.Identity(), Vector(3.0, 0, 0) ))
         
         # Store:
         self.B = Design.Design(b[0], b)
@@ -70,6 +86,9 @@ class Test_Kinematics(unittest.TestCase):
         self.C = Design.Design(c[0], c)
         self.D = Design.Design(d[0], d)
         self.E = Design.Design(e[0], e)
+        self.F = Design.Design(f[0], f)
+        self.G = Design.Design(g[0], g)
+        
         # nodemaps:
         self.AB_nodemap = {b[0]: a[0],
                            b[1]: a[2],
@@ -88,7 +107,13 @@ class Test_Kinematics(unittest.TestCase):
         self.EB_nodemap = {b[0]: e[0],
                            b[1]: e[2],
                            } #yes
-        
+        self.GF_nodemap = {f[0]: g[0],
+                           f[1]: g[2],
+                           f[2]: g[4],
+                           } #yes
+        self.GB_nodemap = {b[0]: g[2],
+                           b[1]: g[4],
+                           }
         
         return
 
@@ -107,13 +132,24 @@ class Test_Kinematics(unittest.TestCase):
         AC_embedding = Embedding.Embedding(self.A, self.C, self.params, self.AC_nodemap)
         BD_embedding = Embedding.Embedding(self.B, self.D, self.params, self.BD_nodemap)
         EB_embedding = Embedding.Embedding(self.E, self.B, self.params, self.EB_nodemap)
+        GF_embedding = Embedding.Embedding(self.G, self.F, self.params, self.GF_nodemap)
+        GB_embedding = Embedding.Embedding(self.G, self.B, self.params, self.GB_nodemap)
         
         # Set E angles appropriately:
         self.E.nodes[0].current_angle = acos(1./3)
         self.E.nodes[1].current_angle = -2*acos(1./3)
-        self.E.nodes[2].current_angle = acos(1./3)
-        pass_set = [ AB_embedding, EB_embedding ]
+        #self.E.nodes[2].current_angle = acos(1./3)
+        self.E.nodes[2].current_angle = radians(10)
         
+        # set G angles appropriately:
+        self.G.nodes[0].current_angle = acos(1./3)
+        self.G.nodes[1].current_angle = -2*acos(1./3)
+        self.G.nodes[2].current_angle = acos(1./3)# + acos(1./3)
+        self.G.nodes[3].current_angle = -2*acos(1./3)
+        self.G.nodes[4].current_angle = 0
+        
+        #pass_set = [ AB_embedding, EB_embedding, GF_embedding ]
+        pass_set = [ EB_embedding, GB_embedding, GF_embedding ]
         
         for i, embedding in enumerate(pass_set):
             assert embedding.check_edge2path(), 'Pass set ' + str(i)
