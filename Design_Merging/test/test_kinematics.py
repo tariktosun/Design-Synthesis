@@ -171,6 +171,9 @@ class Test_Kinematics(unittest.TestCase):
         AC_embedding = Embedding.Embedding(self.A, self.C, self.params)
         BD_embedding = Embedding.Embedding(self.B, self.D, self.params)
         EB_embedding = Embedding.Embedding(self.E, self.B, self.params)
+        GF_embedding = Embedding.Embedding(self.G, self.F, self.params, self.GF_nodemap)
+        GB_embedding = Embedding.Embedding(self.G, self.B, self.params, self.GB_nodemap)
+        
         # Set angle incorrectly:
         self.A.nodes[1].current_angle = radians(10)
         
@@ -179,8 +182,15 @@ class Test_Kinematics(unittest.TestCase):
         self.E.nodes[0].current_angle = acos(1./3) + delta
         self.E.nodes[1].current_angle = -2*acos(1./3) + delta
         self.E.nodes[2].current_angle = acos(1./3) + delta
+        
+        # set G angles appropriately:
+        self.G.nodes[0].current_angle = acos(1./3) + delta
+        self.G.nodes[1].current_angle = -2*acos(1./3) + delta
+        self.G.nodes[2].current_angle = acos(1./3) + delta# + acos(1./3)
+        self.G.nodes[3].current_angle = -2*acos(1./3) + delta
+        self.G.nodes[4].current_angle = 0 + delta
           
-        pass_set = [ AB_embedding, EB_embedding ]
+        pass_set = [ AB_embedding, EB_embedding, GF_embedding, GB_embedding ]
         #pass_set = [ AB_embedding ]
           
         for i, embedding in enumerate(pass_set):
