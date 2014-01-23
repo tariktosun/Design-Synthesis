@@ -327,7 +327,42 @@ class Embedding(object):
             #                 pass
         return
     
-    def _find_valid_matching(self, super_children_order, sub_children_order):
+    #     def _find_valid_matching(self, super_children_order, sub_children_order):
+    #         '''
+    #         Finds a valid matching (if there is one) and returns a merged nodemap.
+    #         Returns False if there is no valid matching.
+    #         ''' 
+    #         # this is for non-length case:
+    #         #return all( type(self.T[sup][sub])==dict for sup,sub in zip(super_children_order, sub_children_order) )
+    #         
+    #         # NOTE: all() evaluates to True if arg is not False or None.
+    #         # NOTE: all( [] ) evaluates to True.
+    #         
+    #         if not all( type(self.T[sup][sub])==list for sup,sub in zip(super_children_order, sub_children_order) ):
+    #             # This ensures topological embedding.
+    #             return False
+    #         # now check lengths:
+    #         # Merge nodemaps of all child pairings in table:
+    #         merged_nodemap = []
+    #         for i, sub_child in enumerate(sub_children_order):
+    #             sub_length = sub_child.parent_edge.length
+    #             super_child = super_children_order[i]
+    #             super_length = super_child.parent_edge.length
+    #             for super_descendent_mapping in self.T[super_child][sub_child]:
+    #                 length = super_descendent_mapping[0]
+    #                 #root = super_descendent_mapping[1]
+    #                 nodemap = super_descendent_mapping[2]
+    #                 if super_length + length == sub_length * self.length_scaling:
+    #                     # match found!
+    #                     merged_nodemap += nodemap.items()            
+    #                     break   # (does not trigger else block)
+    #             else:   # triggers when we get all the way through above for loop.
+    #                 return False    # no valid length match found.
+    #         # convert merged_nodemap to dict:    
+    #         merged_nodemap = dict( merged_nodemap )
+    #         return merged_nodemap
+    
+    def _find_valid_kinematic_matching(self, super_children_order, sub_children_order):
         '''
         Finds a valid matching (if there is one) and returns a merged nodemap.
         Returns False if there is no valid matching.
@@ -345,14 +380,17 @@ class Embedding(object):
         # Merge nodemaps of all child pairings in table:
         merged_nodemap = []
         for i, sub_child in enumerate(sub_children_order):
-            sub_length = sub_child.parent_edge.length
+            #sub_length = sub_child.parent_edge.length
             super_child = super_children_order[i]
-            super_length = super_child.parent_edge.length
+            #super_length = super_child.parent_edge.length
             for super_descendent_mapping in self.T[super_child][sub_child]:
-                length = super_descendent_mapping[0]
-                #root = super_descendent_mapping[1]
+                #length = super_descendent_mapping[0]
+                root = super_descendent_mapping[1]
                 nodemap = super_descendent_mapping[2]
-                if super_length + length == sub_length * self.length_scaling:
+                angles_map = super_descendent_mapping[3]
+                #if super_length + length == sub_length * self.length_scaling:
+                path_angles = self.check_edge_IK(sub_child.parent_edge, super_child.parent, root)
+                if not path_angles == False:
                     # match found!
                     merged_nodemap += nodemap.items()            
                     break   # (does not trigger else block)
@@ -360,7 +398,8 @@ class Embedding(object):
                 return False    # no valid length match found.
         # convert merged_nodemap to dict:    
         merged_nodemap = dict( merged_nodemap )
-        return merged_nodemap
+        return merged_nodemap    
+    
               
     #     def check_topological_embedding_brute(self, verbose=False):
     #         '''
