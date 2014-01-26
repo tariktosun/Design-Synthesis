@@ -14,7 +14,7 @@ class Node(object):
     Node class for design merging
     '''
 
-    def __init__(self, name, node_joint):
+    def __init__(self, name):
         '''
         Constructor
         '''
@@ -34,10 +34,13 @@ class Node(object):
         # nodes are stripped.
         self.active = True  # note: inactive nodes must be set as such manually.
         
-        ## Kinematic stuff:
-        self.joint = node_joint # should be a KDL Joint object.
-        self.current_angle = 0
-        self.child_edges = []
+        #         ## Kinematic stuff:
+        #         self.joint = node_joint # should be a KDL Joint object.
+        #         self.current_angle = 0
+        #         self.child_edges = []
+        
+        ## New kinematic stuff:
+        self.child_frames = {} # Frames to child edges.
     
     def nodecost(self):
         '''
@@ -45,14 +48,15 @@ class Node(object):
         '''
         pass
     
-    def add_child(self, child, frame):
+    def add_child(self, child, frame, joint):
         '''
         Builds an edge of specified length from child to this node, making it a
         child of this node.
         '''
         # def add_child(self, child, length=0):
         self.children.append(child)
-        e = Edge(self, child, frame)
+        self.child_frames[child] = frame
+        e = Edge(self, child, joint)
         child.parent = self
         child.parent_edge = e
         return

@@ -63,7 +63,7 @@ class Design(object):
             p.remove_child(n)
         return stripped_design
     
-    def get_kinematics(self, parent_node, child_node):
+    def get_kinematics(self, parent_node, child_node, universal_root=False):
         '''
         Returns (chain, jointAngles), where chain is a KDL chain corresponding 
         to the path between parent_node and child_node, and jointAngles is a
@@ -75,34 +75,50 @@ class Design(object):
         angles_stack = []
         # Append child with Identity frame:
         #joint_stack.append( Joint(Joint.None) )
-        joint_stack.append( child_node.joint )
+        joint_stack.append( child_node.parent_edge.joint )
         #frame_stack.append( Frame( Rotation.Identity() )) wrong.    
-        child_node_type = child_node.joint.getType()
-        if child_node_type == Joint.RotX: #X
+        joint_type = child_node.parent_edge.joint.getType()
+        if joint_type == Joint.RotX: #X
             frame_stack.append( Frame( Rotation.Identity() ) )
-        elif child_node_type == Joint.RotY: #Y
+        elif joint_type == Joint.RotY: #Y
             frame_stack.append( Frame( Rotation.RPY(0, 0, pi/2) ) )
-        elif child_node_type == Joint.RotZ: #Z
+        elif joint_type == Joint.RotZ: #Z
             frame_stack.append( Frame( Rotation.RPY(0, -pi/2, 0) ) )
-        angles_stack.append( child_node.current_angle )
+        angles_stack.append( child_node.parent_edge.current_angle )
         p = child_node
         while p is not parent_node:
             if p.parent is None:
                 return False    # design root reached
-            frame_stack.append( p.parent_edge.frame )
+            #frame_stack.append( p.parent_edge.frame )
+            frame_stack.append( p.parent.child_frames[p] )
             p = p.parent
-            joint_stack.append( p.joint )
-            if not p.joint.getType() == Joint.None:
-                angles_stack.append(p.current_angle)
+            if p.parent_edge is None: #if it's none, it's the root, and this is ok.
+                assert universal_root
+            else:
+                joint_stack.append( p.parent_edge.joint )
+                if not p.parent_edge.joint.getType() == Joint.None:
+                    angles_stack.append(p.parent_edge.current_angle)
         # Now append initial rotation for parent:
-        joint_stack.append( Joint(Joint.None) )
-        parent_node_type = parent_node.joint.getType()
-        if parent_node_type == Joint.RotX: #X
-            frame_stack.append( Frame( Rotation.Identity ) )
-        if parent_node_type == Joint.RotY: #Y
-            frame_stack.append( Frame( Rotation.RPY(0,0,-pi/2) ) )
-        if parent_node_type == Joint.RotZ: #Z
-            frame_stack.append( Frame( Rotation.RPY(0,pi/2,0) ) )
+        if universal_root:
+            # Handles root node corner case.  Parent joint of chain is a u-joint.
+            joint_stack.append(Joint(Joint.RotZ))
+            angles_stack.append(0)
+            frame_stack.append(Frame())
+            joint_stack.append(Joint(Joint.RotY))
+            angles_stack.append(0)
+            frame_stack.append(Frame())
+            joint_stack.append(Joint(Joint.RotX))
+            angles_stack.append(0)
+            #frame_stack.append(Frame())
+        else:
+            joint_stack.append( Joint(Joint.None) )
+            parent_joint_type = parent_node.parent_edge.joint.getType()
+            if parent_joint_type == Joint.RotX: #X
+                frame_stack.append( Frame( Rotation.Identity ) )
+            if parent_joint_type == Joint.RotY: #Y
+                frame_stack.append( Frame( Rotation.RPY(0,0,-pi/2) ) )
+            if parent_joint_type == Joint.RotZ: #Z
+                frame_stack.append( Frame( Rotation.RPY(0,pi/2,0) ) )
         
         # Pop off the stack to populate chain and jointAngles:
         jointAngles = JntArray( len(angles_stack) )
@@ -121,6 +137,66 @@ class Design(object):
         assert len(frame_stack) == 0
         assert chain.getNrOfJoints() == jointAngles.rows()
         return (chain, jointAngles)
+    
+    
+    #     def get_kinematics(self, parent_node, child_node):
+    #         '''
+    #         Returns (chain, jointAngles), where chain is a KDL chain corresponding 
+    #         to the path between parent_node and child_node, and jointAngles is a
+    #         KDL JntArray object with the current angles of the joints along the chain.
+    #         '''
+    #         # produce a stack of joints, a stack of frames, and a stack of angles.
+    #         frame_stack = []
+    #         joint_stack = []
+    #         angles_stack = []
+    #         # Append child with Identity frame:
+    #         #joint_stack.append( Joint(Joint.None) )
+    #         joint_stack.append( child_node.joint )
+    #         #frame_stack.append( Frame( Rotation.Identity() )) wrong.    
+    #         child_node_type = child_node.joint.getType()
+    #         if child_node_type == Joint.RotX: #X
+    #             frame_stack.append( Frame( Rotation.Identity() ) )
+    #         elif child_node_type == Joint.RotY: #Y
+    #             frame_stack.append( Frame( Rotation.RPY(0, 0, pi/2) ) )
+    #         elif child_node_type == Joint.RotZ: #Z
+    #             frame_stack.append( Frame( Rotation.RPY(0, -pi/2, 0) ) )
+    #         angles_stack.append( child_node.current_angle )
+    #         p = child_node
+    #         while p is not parent_node:
+    #             if p.parent is None:
+    #                 return False    # design root reached
+    #             frame_stack.append( p.parent_edge.frame )
+    #             p = p.parent
+    #             joint_stack.append( p.joint )
+    #             if not p.joint.getType() == Joint.None:
+    #                 angles_stack.append(p.current_angle)
+    #         # Now append initial rotation for parent:
+    #         joint_stack.append( Joint(Joint.None) )
+    #         parent_node_type = parent_node.joint.getType()
+    #         if parent_node_type == Joint.RotX: #X
+    #             frame_stack.append( Frame( Rotation.Identity ) )
+    #         if parent_node_type == Joint.RotY: #Y
+    #             frame_stack.append( Frame( Rotation.RPY(0,0,-pi/2) ) )
+    #         if parent_node_type == Joint.RotZ: #Z
+    #             frame_stack.append( Frame( Rotation.RPY(0,pi/2,0) ) )
+    #         
+    #         # Pop off the stack to populate chain and jointAngles:
+    #         jointAngles = JntArray( len(angles_stack) )
+    #         chain = Chain()
+    #         i = 0
+    #         while len(joint_stack) > 0:
+    #             joint = joint_stack.pop()
+    #             frame = frame_stack.pop()
+    #             if not joint.getType() == Joint.None:
+    #                 angle = angles_stack.pop()
+    #                 jointAngles[i] = angle
+    #                 i += 1
+    #             segment = Segment( joint, frame )
+    #             chain.addSegment( segment )
+    #         assert len(angles_stack) == 0
+    #         assert len(frame_stack) == 0
+    #         assert chain.getNrOfJoints() == jointAngles.rows()
+    #         return (chain, jointAngles)
             
     def set_path_angles(self, parent_node, child_node, angles_array):
         '''
@@ -135,11 +211,13 @@ class Design(object):
         while p is not parent_node:
             assert p.parent is not None, 'Design root reached'
             angle = angles_stack.pop()
-            p.current_angle = angle
+            p.parent_edge.current_angle = angle
             p = p.parent
-        # We do set the angle of the parent node:    
-        angle = angles_stack.pop()
-        p.current_angle = angle
+        # We do set the angle of the parent node:
+        # (unless it is the root, in which case we don't do this.)
+        if p.parent is not None:    
+            angle = angles_stack.pop()
+            p.current_angle = angle
         return
     
     def check_validity(self):

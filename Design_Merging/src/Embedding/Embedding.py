@@ -465,25 +465,25 @@ class Embedding(object):
         self.AB_nodemap = None
         return False
     
-    def check_edge_kinematics(self, edge, super_parent, super_child):
-        '''
-        Returns true if the path to which edge argument maps satisfies the
-        kinematic matching condition, and false otherwise. 
-        '''
-         
-        # extract chains and angles:
-        (sub_chain, sub_angles) = self.subD.get_kinematics( edge.parent, edge.child )
-        (super_chain, super_angles) = self.superD.get_kinematics( super_parent, super_child)
-        # Check that end positions match:
-        sub_fk = ChainFkSolverPos_recursive( sub_chain )
-        super_fk = ChainFkSolverPos_recursive( super_chain )
-        sub_finalFrame = Frame()
-        super_finalFrame = Frame()
-        sub_fk.JntToCart( sub_angles, sub_finalFrame )
-        super_fk.JntToCart( super_angles, super_finalFrame )
-        # test approximate equality:
-        return self._frame_axes_match(sub_finalFrame, super_finalFrame)
-        #return sub_finalFrame == super_finalFrame
+    #     def check_edge_kinematics(self, edge, super_parent, super_child):
+    #         '''
+    #         Returns true if the path to which edge argument maps satisfies the
+    #         kinematic matching condition, and false otherwise. 
+    #         '''
+    #          
+    #         # extract chains and angles:
+    #         (sub_chain, sub_angles) = self.subD.get_kinematics( edge.parent, edge.child )
+    #         (super_chain, super_angles) = self.superD.get_kinematics( super_parent, super_child)
+    #         # Check that end positions match:
+    #         sub_fk = ChainFkSolverPos_recursive( sub_chain )
+    #         super_fk = ChainFkSolverPos_recursive( super_chain )
+    #         sub_finalFrame = Frame()
+    #         super_finalFrame = Frame()
+    #         sub_fk.JntToCart( sub_angles, sub_finalFrame )
+    #         super_fk.JntToCart( super_angles, super_finalFrame )
+    #         # test approximate equality:
+    #         return self._frame_axes_match(sub_finalFrame, super_finalFrame)
+    #         #return sub_finalFrame == super_finalFrame
 
     def _frame_axes_match(self, frameA, frameB, tol=0.005):
         ''' Checks for near-equality of the position vectors and of the x-axes
@@ -523,8 +523,14 @@ class Embedding(object):
         found.
         '''
         # extract chains and angles:
-        (sub_chain, sub_angles) = self.subD.get_kinematics( edge.parent, edge.child )
-        (super_chain, super_angles) = self.superD.get_kinematics( super_parent, super_child)
+        # corner case: either edge.parent or super_parent is the root node,
+        # and has no parent:
+        if (edge.parent.parent == None) or  (super_parent.parent == None):
+            universal_root = True
+        else:
+            universal_root = False
+        (sub_chain, sub_angles) = self.subD.get_kinematics( edge.parent, edge.child, universal_root )
+        (super_chain, super_angles) = self.superD.get_kinematics( super_parent, super_child, universal_root)
         # Check that end positions match:
         sub_fk = ChainFkSolverPos_recursive( sub_chain )
         sub_finalFrame = Frame()
@@ -535,12 +541,19 @@ class Embedding(object):
         super_fk = ChainFkSolverPos_recursive( super_chain )
         super_vik = ChainIkSolverVel_pinv(super_chain)
         super_ik = ChainIkSolverPos_NR( super_chain, super_fk, super_vik )
-        super_ik_angles = JntArray(super_chain.getNrOfJoints())
+        super_ik_angles = JntArray( super_chain.getNrOfJoints() )
         ik_success = super_ik.CartToJnt( super_angles, sub_finalFrame, super_ik_angles )
         if ik_success < 0:
             return False
         else:
-            return super_ik_angles
+            if universal_root:
+                # strip the u-joint.
+                a = JntArray( super_chain.getNrOfJoints() - 2 )
+                for i in xrange(2, super_chain.getNrOfJoints()):
+                    a[i-2] = super_ik_angles[i]
+                return a
+            else:
+                return super_ik_angles
     
     def check_vertex2vertex(self):
         ''' 
@@ -576,7 +589,7 @@ class Embedding(object):
             used_nodes.append(nodemap[node])
         return True
     
-    def check_edge2path(self, IK=False):
+    def check_edge2path(self):
         '''
         Returns True if AB_nodemap satisfies edge-to-path correspondence with A
         embedding B.  Length correspondence is checked.  If IK is set to True, 
@@ -584,6 +597,7 @@ class Embedding(object):
         IK angles. If IK is False uses the current angle angles of the joints and
         makes no changes.
         '''
+        IK=True
         #A = embedding.A
         subD = self.subD
         nodemap = self.AB_nodemap
