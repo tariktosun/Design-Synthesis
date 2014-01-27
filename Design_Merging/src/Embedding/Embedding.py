@@ -458,7 +458,7 @@ class Embedding(object):
                     count += 1
                 self.AB_nodemap = dict (zip(sub_perm, super_perm))
                 if self.check_vertex2vertex():
-                    if self.check_edge2path(IK=True):
+                    if self.check_edge2path():
                         if self.check_vertex_disjointness():
                             return True
         # no embedding found.
