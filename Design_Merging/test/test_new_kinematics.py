@@ -201,7 +201,7 @@ class Test_new_kinematics(unittest.TestCase):
         for i, embedding in enumerate(fail_set):
             assert not embedding.check_edge2path(), 'Fail set ' + str(i)
     
-    def test_kinematic_brute(self):
+    def test_kinematics_brute(self):
         '''
         Tests brute-force function for embedding detection:
         '''
@@ -243,6 +243,49 @@ class Test_new_kinematics(unittest.TestCase):
         fail_set = [ CB_embedding , CA_embedding, DB_embedding, AC_embedding, BD_embedding ]
         for i, embedding in enumerate(fail_set):
             assert not embedding.check_kinematic_embedding_brute(), 'Fail set ' + str(i)
+            
+    def test_kinematics_dynamic(self):
+        '''
+        Tests brute-force function for embedding detection:
+        '''
+        AB_embedding = Embedding.Embedding(self.A, self.B, self.params)
+        CB_embedding = Embedding.Embedding(self.C, self.B, self.params)
+        CA_embedding = Embedding.Embedding(self.C, self.A, self.params)
+        DB_embedding = Embedding.Embedding(self.D, self.B, self.params)
+        AC_embedding = Embedding.Embedding(self.A, self.C, self.params)
+        BD_embedding = Embedding.Embedding(self.B, self.D, self.params)
+        EB_embedding = Embedding.Embedding(self.E, self.B, self.params)
+        GF_embedding = Embedding.Embedding(self.G, self.F, self.params)
+        GB2_embedding = Embedding.Embedding(self.G, self.B2, self.params)
+        
+        # Set angle incorrectly:
+        self.A.nodes[2].parent_edge.current_angle = radians(10)
+        
+        # Set E angles appropriately:
+        delta = radians(50) # Fails for 60.
+        self.E.nodes[1].parent_edge.current_angle = acos(1./3) + delta
+        self.E.nodes[2].parent_edge.current_angle = -2*acos(1./3) + delta
+        self.E.nodes[3].parent_edge.current_angle = acos(1./3) + delta
+        
+        # set G angles appropriately:
+        self.G.nodes[1].parent_edge.current_angle = acos(1./3) + delta
+        self.G.nodes[2].parent_edge.current_angle = -2*acos(1./3) + delta
+        self.G.nodes[3].parent_edge.current_angle = acos(1./3) + delta# + acos(1./3)
+        self.G.nodes[4].parent_edge.current_angle = -2*acos(1./3) + delta
+        self.G.nodes[5].parent_edge.current_angle = 0 + delta
+          
+        pass_set = [ AB_embedding, EB_embedding, GF_embedding, GB2_embedding, ]
+        #pass_set = [ AB_embedding ]
+          
+        for i, embedding in enumerate(pass_set):
+            assert embedding.check_kinematic_embedding_dynamic(), 'Pass set ' + str(i)
+            assert embedding.check_vertex2vertex(), 'Pass set ' + str(i)
+            assert embedding.check_edge2path(), 'Pass set ' + str(i)
+            assert embedding.check_vertex_disjointness(), 'Pass set ' + str(i)
+          
+        fail_set = [ CB_embedding , CA_embedding, DB_embedding, AC_embedding, BD_embedding ]
+        for i, embedding in enumerate(fail_set):
+            assert not embedding.check_kinematic_embedding_dynamic(), 'Fail set ' + str(i)
 
 
 if __name__ == "__main__":

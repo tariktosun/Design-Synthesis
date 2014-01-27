@@ -122,18 +122,13 @@ class Design(object):
             if parent_joint_type == Joint.RotZ: #Z
                 frame_stack.append( Frame( Rotation.RPY(0,pi/2,0) ) )
         
-        if parent_node.name == 'a21' and child_node.name== 'a22':
-            pass
         # Pop off the stack to populate chain and jointAngles:
         jointAngles = JntArray( len(angles_stack) )
         chain = Chain()
         i = 0
         while len(joint_stack) > 0:
             joint = joint_stack.pop()
-            try:
-                frame = frame_stack.pop()
-            except:
-                assert False
+            frame = frame_stack.pop()
             if not joint.getType() == Joint.None:
                 angle = angles_stack.pop()
                 jointAngles[i] = angle

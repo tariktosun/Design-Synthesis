@@ -152,8 +152,12 @@ class Embedding(object):
         boolean_result = self._embeds(self.superD.root_node, self.subD.root_node)
         if boolean_result:
             # take the first valid embedding stored at the root.
-            (_, _, nodemap) = self.T[self.superD.root_node][self.subD.root_node][0]
+            (_, _, nodemap, angles_map) = self.T[self.superD.root_node][self.subD.root_node][0]
             self.AB_nodemap = nodemap
+            for (node, angle) in angles_map.iteritems():
+                # set path angles:
+                assert node in self.superD.nodes
+                node.current_angle = angle
         else:
             self.AB_nodemap = False
         return boolean_result
@@ -179,7 +183,7 @@ class Embedding(object):
             
             # We have found an embedding. Record it and propagate upwards:
             nodemap = {subN:superN}
-            self._record_and_propagate(superN, subN, nodemap)            
+            self._record_and_propagate(superN, subN, nodemap, {})            
             return True
         elif subN.children == []:
             ''' base case 2: superN has children, but subN does not.
@@ -207,7 +211,7 @@ class Embedding(object):
             # all tests passed, so we have found a root-matched embedding.
             # all children of superN in this case MUST be unused (subN is a leaf)
             nodemap = {subN:superN}
-            self._record_and_propagate(superN, subN, nodemap)
+            self._record_and_propagate(superN, subN, nodemap, {})
             return True
         elif superN.children == []:
             ''' if superN has no children but subN has children, superN cannot
@@ -264,13 +268,15 @@ class Embedding(object):
             #brute force search for matching:
             for sub_children_perm in permutations(subN.children):
                 for super_children_perm in permutations(superN.children, len(subN.children)):
-                    merged_nodemap = self._find_valid_matching(super_children_perm, sub_children_perm)
-                    if merged_nodemap:
+                    merged_maps = self._find_valid_kinematic_matching(super_children_perm, sub_children_perm)
+                    if merged_maps:
+                        merged_nodemap = merged_maps[0]
+                        merged_angles_map = merged_maps[1]
                         # We have found an embedding. Record it and propagate upwards.
                         # add in the parent pairing:
                         merged_nodemap[subN] = superN                        
                         # record and propagate to parents:
-                        self._record_and_propagate(superN, subN, merged_nodemap)
+                        self._record_and_propagate(superN, subN, merged_nodemap, merged_angles_map)
                         return True
             # children cannot be matched; embedding fails.
             ''' (1) does subN embed in a child of superN? '''
@@ -303,7 +309,7 @@ class Embedding(object):
                     else:   # no rooted embedding found
                         self._embeds(superC, subN)
     
-    def _record_and_propagate(self, superN, subN, nodemap):
+    def _record_and_propagate(self, superN, subN, nodemap, angles_map):
         '''
         Propagates an embedding to all parents of the super node.  Embeddings 
         are stored in the table as: (length_to_root, root_of_embedding, nodemap),
@@ -319,9 +325,10 @@ class Embedding(object):
             # we should never be overwriting a False entry.
             assert self.T[p][subN] is not False, 'Attempted to record valid embedding in previously invalidated table spot'
             
-            self.T[p][subN].append( (super_path_length, superN, nodemap) )
+            self.T[p][subN].append( (super_path_length, superN, nodemap, angles_map) )
             if p.parent is not None:
-                super_path_length += p.parent_edge.length
+                #super_path_length += p.parent_edge.length
+                super_path_length += 1  # "length" just counts number of nodes now. might be good for debugging.
             p = p.parent
             #             if superN.name == '11-3' and subN.name == '1-3':
             #                 pass
@@ -379,6 +386,7 @@ class Embedding(object):
         # now check lengths:
         # Merge nodemaps of all child pairings in table:
         merged_nodemap = []
+        merged_angles_map = []
         for i, sub_child in enumerate(sub_children_order):
             #sub_length = sub_child.parent_edge.length
             super_child = super_children_order[i]
@@ -392,13 +400,21 @@ class Embedding(object):
                 path_angles = self.check_edge_IK(sub_child.parent_edge, super_child.parent, root)
                 if not path_angles == False:
                     # match found!
-                    merged_nodemap += nodemap.items()            
+                    merged_nodemap += nodemap.items()
+                    merged_angles_map += angles_map.items()            
                     break   # (does not trigger else block)
             else:   # triggers when we get all the way through above for loop.
                 return False    # no valid length match found.
-        # convert merged_nodemap to dict:    
+        # convert merged maps to dicts:    
         merged_nodemap = dict( merged_nodemap )
-        return merged_nodemap    
+        merged_angles_map = dict( merged_angles_map )
+        # Add in current path_angles to merged_angles_map:
+        path_angles = list(path_angles)
+        p = root
+        while p is not super_child.parent:
+            merged_angles_map[p] = path_angles.pop()
+            p = p.parent
+        return (merged_nodemap, merged_angles_map)    
     
               
     #     def check_topological_embedding_brute(self, verbose=False):
