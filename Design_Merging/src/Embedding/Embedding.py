@@ -633,8 +633,9 @@ class Embedding(object):
                 else:
                     self.superD.set_path_angles(nodemap[edge.parent], nodemap[edge.child], ik_angles)
             else:
-                if not self.check_edge_kinematics(edge, nodemap[edge.parent], nodemap[edge.child]):
-                    return False
+                assert False # should never be here.
+                #                 if not self.check_edge_kinematics(edge, nodemap[edge.parent], nodemap[edge.child]):
+                #                     return False
             
         return True
             

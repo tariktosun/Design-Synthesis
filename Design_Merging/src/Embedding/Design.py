@@ -101,15 +101,17 @@ class Design(object):
         # Now append initial rotation for parent:
         if universal_root:
             # Handles root node corner case.  Parent joint of chain is a u-joint.
-            joint_stack.append(Joint(Joint.RotZ))
+            joint_stack.append(Joint(Joint.RotX))
             angles_stack.append(0)
             frame_stack.append(Frame())
             joint_stack.append(Joint(Joint.RotY))
             angles_stack.append(0)
             frame_stack.append(Frame())
-            joint_stack.append(Joint(Joint.RotX))
+            joint_stack.append(Joint(Joint.RotZ))
             angles_stack.append(0)
-            #frame_stack.append(Frame())
+            if len(frame_stack) < len(joint_stack):
+                # Add in another frame if we need one.
+                frame_stack.append(Frame())
         else:
             joint_stack.append( Joint(Joint.None) )
             parent_joint_type = parent_node.parent_edge.joint.getType()
@@ -120,13 +122,18 @@ class Design(object):
             if parent_joint_type == Joint.RotZ: #Z
                 frame_stack.append( Frame( Rotation.RPY(0,pi/2,0) ) )
         
+        if parent_node.name == 'a21' and child_node.name== 'a22':
+            pass
         # Pop off the stack to populate chain and jointAngles:
         jointAngles = JntArray( len(angles_stack) )
         chain = Chain()
         i = 0
         while len(joint_stack) > 0:
             joint = joint_stack.pop()
-            frame = frame_stack.pop()
+            try:
+                frame = frame_stack.pop()
+            except:
+                assert False
             if not joint.getType() == Joint.None:
                 angle = angles_stack.pop()
                 jointAngles[i] = angle
