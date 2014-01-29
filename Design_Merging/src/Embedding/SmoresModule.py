@@ -13,17 +13,17 @@ class SmoresModule(object):
             0
             |
         2 - 1 - 3
-    Nodes 0, 2, and 3 are type 1 (continuous rotation), and Node 1 is type 2 
-    (hinge).  All three edges are length 1, and any edge connecting one module
-    to another is length zero.  All nodes are active by default.  The use may 
-    specify which nodes are inactive using arguments to the constructor and
-    add_child functions. 
+            |
+            4
+    Edge 0-1, 1-2, and 1-3 are CR, and edge 1-4 is a hinge.  All nodes are type
+    2. Node 1 is the only one with extent. All nodes are active by default.  The
+    user may specify which nodes are inactive using arguments to the constructor
+    and add_child functions.   
     '''
-
 
     def __init__(self, name, root_node_number, inactive_nodes_numbers=[]):
         '''
-        Constructor.  root_node is a number (0-3) specifying which node in this
+        Constructor.  root_node is a number (0-4) specifying which node in this
         module is the root.  inactive_nodes is a list of numbers (again, 0-3)
         specifying which nodes should be considered inactive in this module.
         '''
@@ -32,37 +32,37 @@ class SmoresModule(object):
         # root node number:
         self.root_node_number = root_node_number
         # list of child modules:
-        self.child_modules = [None, None, None, None]    # note that only 3 may be used.
+        self.child_modules = [None, None, None, None, None]    # note that only 3 may be used.
         # parent module:
         self.parent_module = None
         
         # set up list of nodes.  The order is important.
-        self.nodes = [Node.Node(self.name+"-"+str(i)) for i in range(4)]
+        self.nodes = [Node.Node(self.name+"-"+str(i)) for i in range(5)]
         # set activity:
         for i in inactive_nodes_numbers:
             self.nodes[i].active = False
         # set types:
-        for i in [0,2,3]:
-            self.nodes[i].type = 1
-        self.nodes[1].type = 2
+        for i in range(0,5):
+            self.nodes[i].type = 2
         # create structure based on root:
         n = self.nodes # for easy typing...
         if root_node_number == 0:
             n[0].add_child( n[1], 1 )
             n[1].add_child( n[2], 1 )
             n[1].add_child( n[3], 1 )
+            n[1].add_child( n[4], )
         if root_node_number == 1:
-            n[1].add_child( n[0], 1 )
-            n[1].add_child( n[2], 1 )
-            n[1].add_child( n[3], 1 )
+            assert False, 'Node 1 cannot be the root.'
         if root_node_number == 2:
             n[2].add_child( n[1], 1 )
             n[1].add_child( n[0], 1 )
             n[1].add_child( n[3], 1 )
+            n[1].add_child( n[4], )
         if root_node_number == 3:
             n[3].add_child( n[1], 1 )
             n[1].add_child( n[0], 1 )
             n[1].add_child( n[2], 1 )
+            n[1].add_child( n[4], )
             
     def add_child_module(self, node_number, child_module):
         '''
