@@ -54,23 +54,23 @@ class SmoresModule(object):
         cInB = self._get_base2child # This is a function.
         J = self._get_node_parent_joint #this is a function.
         if root_node_number == 0:
-            n[0].add_child( n[1], Frame(), Joint.RotX)
+            n[0].add_child( n[1], Frame(), Joint(Joint.RotX))
             for i in [2,3,4]:
-                n[1].add_child( n[i], bfInR*cInB(i), J(i) )
+                n[1].add_child( n[i], bfInR*cInB(i), Joint(J(i)) )
         if root_node_number == 1:
             assert False, 'Node 1 cannot be the root.'
         if root_node_number == 2:
-            n[2].add_child( n[1], Frame(), Joint.RotX )
+            n[2].add_child( n[1], Frame(), Joint(Joint.RotX) )
             for i in [0, 3, 4]:
-                n[1].add_child( n[i], bfInR*cInB(i), J(i) )
+                n[1].add_child( n[i], bfInR*cInB(i), Joint(J(i)) )
         if root_node_number == 3:
-            n[3].add_child( n[1], Frame(), Joint.RotX )
+            n[3].add_child( n[1], Frame(), Joint(Joint.RotX) )
             for i in [0,2,4]:
-                n[1].add_child( n[i], bfInR*cInB(i), J(i) )
+                n[1].add_child( n[i], bfInR*cInB(i), Joint(J(i)) )
         if root_node_number == 4:
-            n[4].add_child( n[1], Frame( Vector(1, 0, 0), Joint.RotY ))
+            n[4].add_child( n[1], Frame( Vector(1, 0, 0)), Joint(Joint.RotY) )
             for i in [0, 2, 3]:
-                n[1].add_child( n[i], bfInR*cInB(i), J(i))
+                n[1].add_child( n[i], bfInR*cInB(i), Joint(J(i)))
             
     def add_child_module(self, node_number, child_module):
         '''
@@ -86,19 +86,22 @@ class SmoresModule(object):
         child_module.parent_module = self
         # connect root node of child module to specified node of this module:
         # Rather than adding a rigid connection, we're going to fuse two nodes.
-        n = self.nodes[node_number]
+        n = self.nodes[node_number] #node in the parent which will be fused.
         p = n.parent
-        r = child_module.nodes[child_module.root_node_number]
+        r = child_module.nodes[child_module.root_node_number] # root node in the child module (to be fused).
         # fuse names:
-        r.name = n.name + '+' + r.name
+        r.name = n.name + '/' + r.name
         # connect n's parent node to r:
         p.children.append(r)
         p.children.remove(n)
         p.child_frames[r] = p.child_frames[n]
-        del p[n]
+        del p.child_frames[n]
+        r.parent = p
         # handle the edge:
         n.parent_edge.child = r
         r.parent_edge = n.parent_edge
+        # handle node list in the module:
+        self.nodes[node_number] = r # node n is no longer needed; it has been fused into r.
         # Add a frame xform if needed:
         if node_number == 4:
             assert len(r.child_frames.keys())==1, 'Fusion error: child module root node has more than one child!'
@@ -143,7 +146,7 @@ class SmoresModule(object):
         Returns Frame transform from base frame to a child node.
         '''
         if child_node_number is 0:
-            return Frame( Vector(0, -1, 0) )
+            return Frame( Vector(1, 0, 0) )
         elif child_node_number is 1:
             assert False, 'node 1 frame is determined by root.'
         elif child_node_number is 2:

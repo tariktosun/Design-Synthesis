@@ -52,16 +52,16 @@ class Design(object):
         Returns a design identical to this one, but with inactive nodes stripped.
         Note that this does not modify the current Design, it returns a new one.
         '''
-        stripped_design = copy.deepcopy(self)
-        inactive_nodes = [n for n in stripped_design.nodes if n.active == False]
+        #stripped_design = copy.deepcopy(self)
+        inactive_nodes = [n for n in self.nodes if n.active == False]
         for n in inactive_nodes:
             assert n.is_end_effector == False, 'Attempted to strip an inactive node that was an end effector'
             assert n.children == [], 'Attempted to strip inactive node ' + str(n.name) + ', but it had children'
-            stripped_design.edges.remove(n.parent_edge)
-            stripped_design.nodes.remove(n)
+            self.edges.remove(n.parent_edge)
+            self.nodes.remove(n)
             p = n.parent
             p.remove_child(n)
-        return stripped_design
+        #return stripped_design
     
     def get_kinematics(self, parent_node, child_node, universal_root=False):
         '''
@@ -77,7 +77,10 @@ class Design(object):
         #joint_stack.append( Joint(Joint.None) )
         joint_stack.append( child_node.parent_edge.joint )
         #frame_stack.append( Frame( Rotation.Identity() )) wrong.    
-        joint_type = child_node.parent_edge.joint.getType()
+        try:
+            joint_type = child_node.parent_edge.joint.getType()
+        except:
+            assert False
         if joint_type == Joint.RotX: #X
             frame_stack.append( Frame( Rotation.Identity() ) )
         elif joint_type == Joint.RotY: #Y
@@ -116,7 +119,7 @@ class Design(object):
             joint_stack.append( Joint(Joint.None) )
             parent_joint_type = parent_node.parent_edge.joint.getType()
             if parent_joint_type == Joint.RotX: #X
-                frame_stack.append( Frame( Rotation.Identity ) )
+                frame_stack.append( Frame( Rotation.Identity() ) )
             if parent_joint_type == Joint.RotY: #Y
                 frame_stack.append( Frame( Rotation.RPY(0,0,-pi/2) ) )
             if parent_joint_type == Joint.RotZ: #Z

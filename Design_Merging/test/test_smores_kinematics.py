@@ -9,7 +9,7 @@ import Embedding.Design as Design
 from Embedding import Embedding
 import Embedding.SmoresModule as SmoresModule
 import Embedding.SmoresDesign as SmoresDesign
-from fixtures_grasper_walker import setUpGrasperWalker
+from fixtures_kinematic_grasper_walker import setUpKinematicGrasperWalker
 
 class Test_Smores_Kinematics(unittest.TestCase):
 
@@ -23,79 +23,91 @@ class Test_Smores_Kinematics(unittest.TestCase):
         length_scaling = 1
         self.params = {'types_subsumed': types_subsumed,
                        'length_scaling': length_scaling}
-        # Manual SMORES subdesign:
-        b = [Node.Node(str(i)) for i in range(8)]
-        
-        #build structure:
-        b[7].add_child(b[4])
-        b[4].add_child(b[5])
-        b[4].add_child(b[6])
-        b[4].add_child(b[3])
-        b[3].add_child(b[2])
-        b[3].add_child(b[1])
-        b[3].add_child(b[0])
-        #Assign types and activity:
-        for i in [4,3]:
-            b[i].type = 2
-        for i in [5,7,6,0,1,2]:
-            b[i].type = 1
-        for i in [5,6,1,2]:
-            b[i].active = False
-        #store:
-        self.B = Design.Design(b[7], b)
-        # set lengths:
-        for e in self.B.edges:
-            e.length = 1
-        self.B.nodes[3].parent_edge.length = 2
-        
-        # Manual SMORES superdesign:
-        a = [Node.Node(str(i)) for i in range(8)]
-        
-        # build structure:
-        a[7].add_child(a[5])
-        for i in [4,6]:
-            a[5].add_child(a[i])
-        a[4].add_child(a[3])
-        for i in [0,1,2]:
-            a[3].add_child(a[i])
-        # Assign types and activity:
-        for i in [3,5]:
-            a[i].type = 2
-        for i in [0,1,2,4,6,7]:
-            a[i].type = 1
-        # All nodes active by default.
-        #store:
-        self.A = Design.Design(a[7], a)
-        # set lengths:
-        for e in self.A.edges:
-            e.length = 1
-        #a[3].parent_edge.length = 0 incorrect.
         
         ''' The same designs, but made using the SmoresModule class: '''
         # Subdesign:
-        b_smores = [ SmoresModule.SmoresModule('0',1, [2,3]), SmoresModule.SmoresModule('1',0, [2,3]) ]
+        b_smores = [ SmoresModule.SmoresModule('B0',4, [2,3]), SmoresModule.SmoresModule('B1',0, [2,3]) ]
         # build structure:
-        b_smores[1].add_child_module( 1, b_smores[0] )
+        b_smores[1].add_child_module( 4, b_smores[0] )
         # make a SmoresDesign and store :
         self.BSmores = SmoresDesign.SmoresDesign( b_smores[1], b_smores )
         
         # Superdesign:
-        a_smores = [ SmoresModule.SmoresModule( '0', 1 ), SmoresModule.SmoresModule( '1', 2 ) ]
+        a_smores = [ SmoresModule.SmoresModule( 'A0', 4 ), SmoresModule.SmoresModule( 'A1', 2, [4] ) ]
         # build structure:
         a_smores[1].add_child_module( 3 , a_smores[0] )
         # make a SmoresDesign and store it:
         self.ASmores = SmoresDesign.SmoresDesign( a_smores[1], a_smores )
+        
+        # nodemaps:
+        self.AB_nodemap = {b_smores[1].nodes[0]: a_smores[1].nodes[2],
+                           b_smores[1].nodes[1]: a_smores[1].nodes[1],
+                           b_smores[1].nodes[4]: a_smores[1].nodes[3],
+                           b_smores[0].nodes[1]: a_smores[0].nodes[1],
+                           b_smores[0].nodes[0]: a_smores[0].nodes[0],
+                           } #no - actually doesn't work with kinematics!
 
         ''' Grasper and walker: '''
-        setUpGrasperWalker(self)
+        setUpKinematicGrasperWalker(self)
 
 
     def tearDown(self):
         pass
-
-
-    def testName(self):
-        pass
+    def test_stripping_simple(self):
+        ''' Simple test of node stripping. '''
+        assert len(self.BSmores.nodes) == 9
+        assert len(self.BSmores.edges) == 8
+        
+        self.BSmores.strip_inactive_nodes()
+        assert len(self.BSmores.nodes) == 5
+        assert len(self.BSmores.edges) == 4
+        
+     
+    def test_smores_class_kinematics(self):
+        '''
+        Tests a pre-defined nodemap for BSmores and ASmores.
+        '''
+        self.BSmores.strip_inactive_nodes()
+        stripped_embedding = Embedding.Embedding(self.ASmores, self.BSmores, self.params, self.AB_nodemap)
+        assert stripped_embedding.check_vertex2vertex()
+        assert not stripped_embedding.check_edge2path()
+        assert stripped_embedding.check_vertex_disjointness()
+    
+    def test_smores_class_embedding(self):
+        '''
+        The same as test_manual_smores_embedding, but with the SMORES class nodes.
+        '''
+        #stripped_BSmores = self.BSmores.strip_inactive_nodes()
+        # note that A has not been stripped yet.
+        self.BSmores.strip_inactive_nodes()
+        stripped_embedding = Embedding.Embedding(self.ASmores, self.BSmores, self.params)
+        #unstripped_embedding = Embedding.Embedding(self.ASmores, self.BSmores, self.params)
+        
+        # dynamic & brute embeddings of stripped version should both pass:
+        '''
+        #brute
+        assert stripped_embedding.check_kinematic_embedding_brute()
+        assert stripped_embedding.check_vertex2vertex()
+        assert stripped_embedding.check_edge2path()
+        assert stripped_embedding.check_vertex_disjointness()
+        '''
+        # dynamic:
+        assert not stripped_embedding.check_kinematic_embedding_dynamic()
+    
+        # only dynamic because brute takes too long to run.
+        #assert not unstripped_embedding.check_topological_embedding_dynamic()
+    
+    def test_grasper_walker(self):
+        '''
+        Tests embedding the grasper in the walker.
+        '''
+        self.grasper.strip_inactive_nodes()
+        gInW_embedding = Embedding.Embedding(self.walker, self.grasper, self.params, self.WG_nodemap)
+        
+        #assert gInW_embedding.check_kinematic_embedding_dynamic()
+        assert gInW_embedding.check_vertex2vertex()
+        assert gInW_embedding.check_edge2path()
+        assert gInW_embedding.check_vertex_disjointness()
 
 
 if __name__ == "__main__":

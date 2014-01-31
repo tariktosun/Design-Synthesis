@@ -54,6 +54,8 @@ class Node(object):
         child of this node.
         '''
         # def add_child(self, child, length=0):
+        assert type(frame) == Frame
+        assert type(joint) == Joint
         self.children.append(child)
         self.child_frames[child] = frame
         e = Edge(self, child, joint)
@@ -67,6 +69,7 @@ class Node(object):
         '''        
         if child in self.children:
             self.children.remove(child)
+            del self.child_frames[child]
         else:
             raise Exception('Child removal failed.  Node was not in list of children.')
         if child.parent == self:
