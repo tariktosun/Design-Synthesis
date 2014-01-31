@@ -81,17 +81,33 @@ class SmoresModule(object):
             assert node_number is not self.root_node_number, 'Attempted to add child module at root_node_number to non-root module.'
             assert node_number is not 1, 'Cannot add child_module at node 1.'
         assert self.child_modules[node_number] is None, 'Attempted to add a child to a filled node_number.'
-        # add to list of children:
+        # Add at the module level:
         self.child_modules[node_number] = child_module
-        # connect root node of child module to specified node of this module:
-        # Edge length depends on the kind of nodes involved:
-        length = 0
-        if node_number == 1:
-            length +=1
-        if child_module.root_node_number == 1:
-            length +=1
-        self.nodes[node_number].add_child(child_module.nodes[child_module.root_node_number], length)
         child_module.parent_module = self
+        # connect root node of child module to specified node of this module:
+        # Rather than adding a rigid connection, we're going to fuse two nodes.
+        n = self.nodes[node_number]
+        p = n.parent
+        r = child_module.nodes[child_module.root_node_number]
+        # fuse names:
+        r.name = n.name + '+' + r.name
+        # connect n's parent node to r:
+        p.children.append(r)
+        p.children.remove(n)
+        p.child_frames[r] = p.child_frames[n]
+        del p[n]
+        # handle the edge:
+        n.parent_edge.child = r
+        r.parent_edge = n.parent_edge
+        # Add a frame xform if needed:
+        if node_number == 4:
+            assert len(r.child_frames.keys())==1, 'Fusion error: child module root node has more than one child!'
+            childInR = r.child_frames.values()[0]
+            rInN = Frame(Vector(1,0,0))
+            r.child_frames[r.child_frames.keys()[0]] = rInN*childInR
+
+        #self.nodes[node_number].add_child(child_module.nodes[child_module.root_node_number], length)
+        
         
     def remove_child_module(self, child_module):
         '''
