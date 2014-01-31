@@ -182,7 +182,7 @@ class Test_Smores(unittest.TestCase):
         stripped_small_grasper = self.grasper_small.strip_inactive_nodes()
         small_embedding = Embedding.Embedding( self.walker_smaller, stripped_small_grasper, self.params)
         
-        '''
+        '''    
         # brute:
         assert small_embedding.check_topological_embedding_brute()
         assert small_embedding.check_vertex2vertex()
