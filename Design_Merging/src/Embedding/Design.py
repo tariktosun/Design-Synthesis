@@ -77,10 +77,7 @@ class Design(object):
         #joint_stack.append( Joint(Joint.None) )
         joint_stack.append( child_node.parent_edge.joint )
         #frame_stack.append( Frame( Rotation.Identity() )) wrong.    
-        try:
-            joint_type = child_node.parent_edge.joint.getType()
-        except:
-            assert False
+        joint_type = child_node.parent_edge.joint.getType()
         if joint_type == Joint.RotX: #X
             frame_stack.append( Frame( Rotation.Identity() ) )
         elif joint_type == Joint.RotY: #Y

@@ -108,6 +108,33 @@ class Test_Smores_Kinematics(unittest.TestCase):
         assert gInW_embedding.check_vertex2vertex()
         assert gInW_embedding.check_edge2path()
         assert gInW_embedding.check_vertex_disjointness()
+      
+    """    
+    def test_grasper_walker_brute(self):
+        '''
+        Test dynamic programming grasper walker.
+        '''
+        self.grasper.strip_inactive_nodes()
+        gInW_embedding = Embedding.Embedding(self.walker, self.grasper, self.params)
+        
+        assert gInW_embedding.check_kinematic_embedding_brute()
+        assert gInW_embedding.check_vertex2vertex()
+        assert gInW_embedding.check_edge2path()
+        assert gInW_embedding.check_vertex_disjointness()
+    """
+        
+    def test_grasper_walker_dynamic(self):
+        '''
+        Test dynamic programming grasper walker.
+        '''
+        self.grasper.strip_inactive_nodes()
+        gInW_embedding = Embedding.Embedding(self.walker, self.grasper, self.params)
+        
+        assert gInW_embedding.check_kinematic_embedding_dynamic()
+        assert gInW_embedding.check_vertex2vertex()
+        assert gInW_embedding.check_edge2path()
+        assert gInW_embedding.check_vertex_disjointness()
+        
 
 
 if __name__ == "__main__":
