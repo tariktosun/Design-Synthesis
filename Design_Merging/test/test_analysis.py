@@ -14,7 +14,10 @@ class TestAnalysis(unittest.TestCase):
 
     def setUp(self):
         ''' set up fixtures for tests. '''
-        pass
+        types_subsumed = {1: [1,2], 2: [2]}
+        length_scaling = 1
+        self.params = {'types_subsumed': types_subsumed,
+                   'length_scaling': length_scaling}
 
 
     def tearDown(self):
@@ -25,10 +28,20 @@ class TestAnalysis(unittest.TestCase):
         ''' Tests that the GrowRandomTree function is behaving properly. '''
         r = RandomTree(4, 1)
         assert len(r.nodes) == 1
-        for i in xrange(100):
+        for _ in xrange(100):
             r = RandomTree(4,2)
             assert len(r.root_node.children)<=4
             assert len(r.nodes) <= 5
+            
+    def test_RandomTree_embedding(self):
+        ''' Basic test of embedding for randomTrees. '''
+        B = RandomTree(4,1)
+        A = RandomTree(4,2)
+        AB_embedding = Embedding.Embedding(A, B, self.params)
+        assert AB_embedding.check_topological_embedding_dynamic()
+        assert AB_embedding.check_vertex2vertex()
+        assert AB_embedding.check_edge2path()
+        assert AB_embedding.check_vertex_disjointness()
         
 
 
