@@ -4,9 +4,8 @@ Created on Jan 15, 2014
 @author: tariktosun
 '''
 
-from Design import Design
+from Design import *
 import SmoresModule
-
 
 class SmoresDesign(Design):
     '''
@@ -28,6 +27,8 @@ class SmoresDesign(Design):
         self.nodes = []
         for m in self.modules:
             self.nodes += m.nodes
+        # remove duplicates from merging:
+        self.nodes = list(set(self.nodes))
         
         # parse the underlying node tree:
         root_node = root_module.nodes[root_module.root_node_number]

@@ -541,6 +541,7 @@ class Embedding(object):
         # extract chains and angles:
         # corner case: either edge.parent or super_parent is the root node,
         # and has no parent:
+        
         if (edge.parent.parent == None) or  (super_parent.parent == None):
             universal_root = True
         else:
