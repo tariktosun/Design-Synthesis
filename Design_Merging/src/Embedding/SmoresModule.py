@@ -70,7 +70,8 @@ class SmoresModule(object):
         if root_node_number == 4:
             n[4].add_child( n[1], Frame( Vector(1, 0, 0)), Joint(Joint.RotY) )
             for i in [0, 2, 3]:
-                n[1].add_child( n[i], bfInR*cInB(i), Joint(J(i)))
+                #n[1].add_child( n[i], bfInR*cInB(i), Joint(J(i)))
+                n[1].add_child( n[i], cInB(i), Joint(J(i)))
             
     def add_child_module(self, node_number, child_module):
         '''

@@ -4,8 +4,8 @@ Created on Jan 31, 2014
 @author: tarik
 '''
 import unittest
-import Embedding.Node as Node
-import Embedding.Design as Design
+#import Embedding.Node as Node
+#import Embedding.Design as Design
 from Embedding import Embedding
 import Embedding.SmoresModule as SmoresModule
 import Embedding.SmoresDesign as SmoresDesign
@@ -97,6 +97,18 @@ class Test_Smores_Kinematics(unittest.TestCase):
         # only dynamic because brute takes too long to run.
         #assert not unstripped_embedding.check_topological_embedding_dynamic()
     
+    def test_small_grasper_walker(self):
+        '''
+        Tests only the small part of the walker and grasper.
+        '''
+        self.small_grasper.strip_inactive_nodes()
+        gInW_small_embedding = Embedding.Embedding(self.small_walker, self.small_grasper, self.params, self.WG_small_nodemap)
+        
+        #assert gInW_embedding.check_kinematic_embedding_dynamic()
+        assert gInW_small_embedding.check_vertex2vertex()
+        assert gInW_small_embedding.check_edge2path()
+        assert gInW_small_embedding.check_vertex_disjointness()
+    
     def test_grasper_walker(self):
         '''
         Tests embedding the grasper in the walker.
@@ -122,7 +134,7 @@ class Test_Smores_Kinematics(unittest.TestCase):
         assert gInW_embedding.check_edge2path()
         assert gInW_embedding.check_vertex_disjointness()
     """
-        
+     
     def test_grasper_walker_dynamic(self):
         '''
         Test dynamic programming grasper walker.
@@ -134,6 +146,8 @@ class Test_Smores_Kinematics(unittest.TestCase):
         assert gInW_embedding.check_vertex2vertex()
         assert gInW_embedding.check_edge2path()
         assert gInW_embedding.check_vertex_disjointness()
+        nicenames = {k.name: v.name for (k,v) in gInW_embedding.AB_nodemap.items()}
+        print nicenames
         
 
 
