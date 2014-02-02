@@ -6,7 +6,7 @@ Created on Dec 30, 2013
 
 import Design
 from itertools import permutations
-import pandas
+#import pandas
 #import sys
 import math
 
