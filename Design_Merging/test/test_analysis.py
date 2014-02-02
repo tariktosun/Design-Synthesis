@@ -8,13 +8,14 @@ import Embedding.Node as Node
 import Embedding.Design as Design
 from Embedding import Embedding
 from Analysis.RandomTree import RandomTree
+from Analysis.AlternatingTree import AlternatingTree
 
 class TestAnalysis(unittest.TestCase):
 
 
     def setUp(self):
         ''' set up fixtures for tests. '''
-        types_subsumed = {1: [1,2], 2: [2]}
+        types_subsumed = {1: [1], 2: [2]}
         length_scaling = 1
         self.params = {'types_subsumed': types_subsumed,
                    'length_scaling': length_scaling}
@@ -43,6 +44,18 @@ class TestAnalysis(unittest.TestCase):
         assert AB_embedding.check_edge2path()
         assert AB_embedding.check_vertex_disjointness()
         
+    def test_AlternatingTree(self):
+        ''' Tests that alternating tree is behaving properly. '''
+        for i in xrange(20):
+            #print i
+            for n in xrange(1,6):
+                B = AlternatingTree('random', 2, n)
+                A = AlternatingTree('alternating', 2, 2*n)
+                AB_embedding = Embedding.Embedding(A, B, self.params)
+                assert AB_embedding.check_topological_embedding_dynamic()
+                assert AB_embedding.check_vertex2vertex()
+                assert AB_embedding.check_edge2path()
+                assert AB_embedding.check_vertex_disjointness()
 
 
 if __name__ == "__main__":
