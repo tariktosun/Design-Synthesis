@@ -73,7 +73,7 @@ class SmoresRandomDesign(SmoresDesign.SmoresDesign):
         
     def grow_tree(self, root_module, current_num_modules, current_depth):
         ''' Recursive function that grows the module tree. '''
-        assert current_num_modules <= self.num_modules, 'Tree grew beyond max depth.'
+        assert current_num_modules <= self.num_modules, 'Tree grew beyond max size.'
         num_descendants = 0    
         available_nodes = [0,2,3,4]
         available_nodes.remove(root_module.root_node_number)
@@ -105,30 +105,6 @@ class SmoresRandomDesign(SmoresDesign.SmoresDesign):
                 root_module.nodes[i].active = False
         return num_descendants
     
-        #     def grow_tree(self, root_module, current_depth):
-        #         ''' Recursive function that grows the module tree. '''
-        #         assert current_depth <= self.depth, 'Tree grew beyond max depth.'
-        #         available_nodes = [0,2,3,4]
-        #         available_nodes.remove(root_module.root_node_number)
-        #         if current_depth == self.depth:
-        #             if self.is_subdesign:
-        #                 # leave only one active node at the end.
-        #                 available_nodes.remove(choice(available_nodes))
-        #                 for i in available_nodes:
-        #                     root_module.nodes[i].active = False
-        #             return
-        #         child_modules = [SmoresModule.SmoresModule('noname', choice([0,2,3,4])) for _ in xrange(randint(0, self.branching_factor))]
-        #         for c in child_modules:
-        #             node_number = choice(available_nodes)   # Add to a random available node
-        #             available_nodes.remove(node_number)
-        #             root_module.add_child_module(node_number, c)
-        #             self.modules.append(c)
-        #             self.grow_tree(c, current_depth+1)
-        #         if self.is_subdesign:
-        #             # any nodes still available are marked inactive.
-        #             for i in available_nodes:
-        #                 root_module.nodes[i].active = False
-        #         return
 
 if __name__ == '__main__':
     pass

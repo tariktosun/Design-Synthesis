@@ -32,6 +32,7 @@ class Embedding(object):
         if nodemap is not None:
             assert isinstance(nodemap, dict), 'Incorrect arguments for Embedding'
         
+        self.node_distance_threshold = 2    # maximum chain length we may perform IK on.
         self.superD = superD
         self.subD = subD
         self.types_subsumed = types_subsumed
@@ -65,8 +66,7 @@ class Embedding(object):
             assert self.types_subsumed.has_key(n.type), 'A node has an invalid type.'
         for n in self.subD.nodes:
             assert self.types_subsumed.has_key(n.type), 'A node has an invalid type.'
-        # checks that 
-            
+        # checks that     
         
         
     def pretty_nodemap(self, nodemap=-1):
@@ -394,6 +394,9 @@ class Embedding(object):
             #super_length = super_child.parent_edge.length
             for super_descendent_mapping in self.T[super_child][sub_child]:
                 #length = super_descendent_mapping[0]
+                distance_to_root = super_descendent_mapping[0]
+                if distance_to_root > self.node_distance_threshold:
+                    continue
                 root = super_descendent_mapping[1]
                 nodemap = super_descendent_mapping[2]
                 angles_map = super_descendent_mapping[3]

@@ -46,7 +46,7 @@ for n in super_nummodules:
 
 sub_designs = {}
 for n in sub_nummodules:
-    designs = [ SmoresRandomDesign(2, n, sqrt(n)/2) for _ in xrange(num_repeats) ]
+    designs = [ SmoresRandomDesign(2, n, sqrt(n)/2, is_subdesign=True) for _ in xrange(num_repeats) ]
     sub_designs[n] = designs
 
 print "Beginning trials."
