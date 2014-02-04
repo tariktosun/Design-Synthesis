@@ -266,18 +266,19 @@ class Embedding(object):
                     self.T[superN][subN] = False
                     return False
             #brute force search for matching:
-            for sub_children_perm in permutations(subN.children):
-                for super_children_perm in permutations(superN.children, len(subN.children)):
-                    merged_maps = self._find_valid_kinematic_matching(super_children_perm, sub_children_perm)
-                    if merged_maps:
-                        merged_nodemap = merged_maps[0]
-                        merged_angles_map = merged_maps[1]
-                        # We have found an embedding. Record it and propagate upwards.
-                        # add in the parent pairing:
-                        merged_nodemap[subN] = superN                        
-                        # record and propagate to parents:
-                        self._record_and_propagate(superN, subN, merged_nodemap, merged_angles_map)
-                        return True
+            #for sub_children_perm in permutations(subN.children):
+            sub_children_perm = subN.children
+            for super_children_perm in permutations(superN.children, len(subN.children)):
+                merged_maps = self._find_valid_kinematic_matching(super_children_perm, sub_children_perm)
+                if merged_maps:
+                    merged_nodemap = merged_maps[0]
+                    merged_angles_map = merged_maps[1]
+                    # We have found an embedding. Record it and propagate upwards.
+                    # add in the parent pairing:
+                    merged_nodemap[subN] = superN                        
+                    # record and propagate to parents:
+                    self._record_and_propagate(superN, subN, merged_nodemap, merged_angles_map)
+                    return True
             # children cannot be matched; embedding fails.
             ''' (1) does subN embed in a child of superN? '''
             # return True if an embedding in a child was found (and propagated up)
