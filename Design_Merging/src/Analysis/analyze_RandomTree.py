@@ -24,7 +24,7 @@ params = {'types_subsumed': types_subsumed,
                    'length_scaling': length_scaling}
 
 repeats = 10
-trials = 1000
+trials = 10000
 times = [0]*trials
 subtrees = [0]*trials
 supertrees = [0]*trials
