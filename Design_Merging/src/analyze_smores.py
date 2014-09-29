@@ -10,7 +10,7 @@ import Embedding.Node as Node
 import Embedding.Design as Design
 from Embedding import Embedding
 from smoresRandomDesign import SmoresRandomDesign
-import timeit
+#import timeit
 import time
 import numpy as np
 from matplotlib.pyplot import *
