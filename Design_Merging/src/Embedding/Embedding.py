@@ -52,7 +52,7 @@ class Embedding(object):
     
     def write_timings_to_file(self, filename):
         ''' Writes out timing data to specified filename '''
-        outfile = open(filename, 'wb')
+        outfile = open(filename, 'a')
         #wr = csv.writer(outfile, quoting=csv.QUOTE_ALL)
         #wr.writerow(self.timing_info)
         for entry in self.timing_info:
