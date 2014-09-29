@@ -111,6 +111,7 @@ class Embedding(object):
                     T_list[i][j] = self.T[superN][subN]
                       
         return pandas.DataFrame(T_list, super_names, sub_names)
+        # Note:  Pandas is a really heavy dependency.  I probably should have done this in a different way.
         #print {k.name:{kk.name:vv  for kk,vv in v.iteritems()} for k,v in self.T.iteritems()}
         
     def type_subsumes(self, supertype, subtype):
@@ -181,7 +182,8 @@ class Embedding(object):
         
     def _embeds(self, superN, subN):
         '''
-        Recursive function testing subtree embedding.
+        Recursive function testing subtree embedding. Returns True or False.  Alters self.AB_nodemap
+        as it runs.
         '''
         # This function should not be called more than once for a pairing.
         #assert self.T[superN][subN] is None, 'Attempted to call _embeds on a filled table entry.'
@@ -330,7 +332,7 @@ class Embedding(object):
     def _record_and_propagate(self, superN, subN, nodemap, angles_map):
         '''
         Propagates an embedding to all parents of the super node.  Embeddings 
-        are stored in the table as: (length_to_root, root_of_embedding, nodemap),
+        are stored in the table as: (length_to_root, root_of_embedding, nodemap, angles_map),
         where root_of_embedding is the node within the tree of superN to which
         subN actually maps.
         '''
