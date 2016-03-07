@@ -9,6 +9,8 @@ from itertools import permutations
 #import pandas
 #import sys
 import math
+import csv
+import time
 # PyKDL:
 import roslib
 roslib.load_manifest('kdl')
@@ -23,6 +25,8 @@ class Embedding(object):
         '''
         Constructor
         '''
+        self.timing_info = None # This is a list of kinematics times.  It's set up in check_embedding_dynamic()
+        
         types_subsumed = params['types_subsumed']
         length_scaling = params['length_scaling']
         assert isinstance( superD, Design.Design ), 'Incorrect arguments for Embedding'
@@ -45,7 +49,16 @@ class Embedding(object):
         self.AB_nodemap = nodemap
         # check validity before returning.
         self.check_validity()
-        
+    
+    def write_timings_to_file(self, filename):
+        ''' Writes out timing data to specified filename '''
+        outfile = open(filename, 'a')
+        #wr = csv.writer(outfile, quoting=csv.QUOTE_ALL)
+        #wr.writerow(self.timing_info)
+        for entry in self.timing_info:
+            outfile.write(str(entry)+'\n')
+        outfile.close()
+       
     def check_validity(self):
         '''
         Checks the validity of this Embedding. Throws assertion error if it fails,
@@ -56,7 +69,7 @@ class Embedding(object):
         # check that types_subsumed is consistent:
         for t in self.types_subsumed.keys():
             subsumed_types = self.types_subsumed[t]
-            # Type must subsume itself:
+            # Type must subsume itself:of tuples (start, delta) measuring
             assert t in subsumed_types, 'Invalid types_subsumed.'
             # any type subsumed must also be in the dict as a key:
             for s in subsumed_types:
@@ -65,7 +78,7 @@ class Embedding(object):
         for n in self.superD.nodes:
             assert self.types_subsumed.has_key(n.type), 'A node has an invalid type.'
         for n in self.subD.nodes:
-            assert self.types_subsumed.has_key(n.type), 'A node has an invalid type.'
+            assert self.types_subsumed.has_key(n.type), 'A node hayannis s an invalid type.'
         # checks that     
         
         
@@ -142,10 +155,14 @@ class Embedding(object):
     #             self.AB_nodemap = False
     #         return boolean_result
     
-    def check_kinematic_embedding_dynamic(self):
+    def check_kinematic_embedding_dynamic(self, record_timings=False):
         '''
         Check kinematic embedding using dynamic programming algorithm.
         '''
+        if record_timings == True:
+            self.timing_info = []
+        else:
+            self.timing_info = None
         # Clear table and nodemap:
         self.T = { superN:{ subN:None for subN in self.subD.nodes } 
                   for superN in self.superD.nodes }  
@@ -264,7 +281,7 @@ class Embedding(object):
                 # return True if an embedding in a child was found (and propagated up)
                 if type(self.T[superN][subN]) == list:
                     return True
-                else:
+                else: 
                     self.T[superN][subN] = False
                     return False
             #brute force search for matching:
@@ -414,7 +431,7 @@ class Embedding(object):
         # convert merged maps to dicts:    
         merged_nodemap = dict( merged_nodemap )
         merged_angles_map = dict( merged_angles_map )
-        # Add in current path_angles to merged_angles_map:
+        # Add in current path_angles to merged_angles_map:yannis 
         path_angles = list(path_angles)
         p = root
         while p is not super_child.parent:
@@ -432,7 +449,7 @@ class Embedding(object):
     #                   for superN in self.superD.nodes }  
     #         self.AB_nodemap = None
     #         N = len(self.subD.nodes) # number of subdesign nodes
-    #         if len(self.superD.nodes) < N:
+    #         if len(self.superD.nodes) < N:yannis 
     #             # shortcut - fewer nodes in superdesign
     #             self.AB_nodemap = None
     #             return False
@@ -509,7 +526,7 @@ class Embedding(object):
 
     def _frame_axes_match(self, frameA, frameB, tol=0.005):
         ''' Checks for near-equality of the position vectors and of the x-axes
-        of two frames.  Near-equality evaluated using a proportional sum of squared
+        of two frames.  Near-equality evaluated using a proportioyannis nal sum of squared
         errors. 
         '''
         Ap = list(frameA.p)
@@ -544,6 +561,10 @@ class Embedding(object):
         solving angles if one can be found, or False if an IK solution cannot be
         found.
         '''
+        # Record the time spent in this function if self.timing_info exists.
+        if self.timing_info is not None:
+            start_time = time.time()
+        
         # extract chains and angles:
         # corner case: either edge.parent or super_parent is the root node,
         # and has no parent:
@@ -567,6 +588,8 @@ class Embedding(object):
         super_ik_angles = JntArray( super_chain.getNrOfJoints() )
         ik_success = super_ik.CartToJnt( super_angles, sub_finalFrame, super_ik_angles )
         if ik_success < 0:
+            if self.timing_info is not None:
+                self.timing_info.append( time.time() - start_time )
             return False
         else:
             if universal_root:
@@ -574,8 +597,12 @@ class Embedding(object):
                 a = JntArray( super_chain.getNrOfJoints() - 2 )
                 for i in xrange(2, super_chain.getNrOfJoints()):
                     a[i-2] = super_ik_angles[i]
+                if self.timing_info is not None:
+                    self.timing_info.append( time.time() - start_time )
                 return a
             else:
+                if self.timing_info is not None:
+                    self.timing_info.append( time.time() - start_time )
                 return super_ik_angles
     
     def check_vertex2vertex(self):
