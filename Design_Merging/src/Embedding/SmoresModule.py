@@ -4,7 +4,7 @@ Created on Jan 15, 2014
 @author: tariktosun
 '''
 import roslib
-roslib.load_manifest('kdl')
+roslib.load_manifest('orocos_kdl')
 from PyKDL import * 
 from math import pi
 import Node

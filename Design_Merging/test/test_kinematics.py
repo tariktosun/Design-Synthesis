@@ -9,7 +9,7 @@ import Embedding.Node as Node
 import Embedding.Design as Design
 # PyKDL:
 import roslib
-roslib.load_manifest('kdl')
+roslib.load_manifest('orocos_kdl')
 from PyKDL import * 
 from math import pi, radians, degrees, acos
 import copy

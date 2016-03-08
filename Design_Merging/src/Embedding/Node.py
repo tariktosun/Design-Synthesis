@@ -5,7 +5,7 @@ Created on Dec 28, 2013
 '''
 #from Embedding.Edge import Edge
 import roslib
-roslib.load_manifest('kdl')
+roslib.load_manifest('orocos_kdl')
 from PyKDL import *
 from Edge import Edge
 

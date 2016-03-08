@@ -13,7 +13,7 @@ import csv
 import time
 # PyKDL:
 import roslib
-roslib.load_manifest('kdl')
+roslib.load_manifest('orocos_kdl')
 from PyKDL import * 
 
 class Embedding(object):
