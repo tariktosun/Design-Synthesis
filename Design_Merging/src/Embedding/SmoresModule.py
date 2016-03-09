@@ -8,6 +8,8 @@ roslib.load_manifest('orocos_kdl')
 from PyKDL import * 
 from math import pi
 import Node
+#
+import pdb
 
 class SmoresModule(object):
     '''
@@ -89,6 +91,7 @@ class SmoresModule(object):
         # Rather than adding a rigid connection, we're going to fuse two nodes.
         n = self.nodes[node_number] #node in the parent which will be fused.
         p = n.parent
+        assert p is not None, 'Cannot add children to root node of design.'
         r = child_module.nodes[child_module.root_node_number] # root node in the child module (to be fused).
         # fuse names:
         r.name = n.name + '/' + r.name
