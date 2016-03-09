@@ -21,6 +21,8 @@ roslib.load_manifest('orocos_kdl')
 from PyKDL import *
 # Other:
 import copy
+import networkx as nx
+import matplotlib.pyplot as plt
 
 class Test_Translation(unittest.TestCase):
 
@@ -45,8 +47,11 @@ class Test_Translation(unittest.TestCase):
         G = T.buildNxGraph(self.fileName)
         assert len(G.nodes())==3
         assert len(G.edges())==2
-        #nx.draw(G)
-        #plt.show()
+        # pos = nx.spring_layout(G)
+        # nodes=nx.draw_networkx_nodes(G, pos)
+        # edges=nx.draw_networkx_edges(G, pos)
+        # labels=nx.draw_networkx_labels(G, pos)
+        # plt.show()
 
     def testBuildModuleGraph(self):
         rootname = 'SMORES_0'
