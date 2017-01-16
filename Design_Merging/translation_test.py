@@ -4,14 +4,14 @@ sys.path.append('src')
 sys.path.append('test')
 # Translate:
 import Translator
-# Embedding
-from Embedding import Embedding
-import Embedding.Node as Node
-import Embedding.Design as Design
-# PyKDL:
-import roslib
-roslib.load_manifest('orocos_kdl')
-from PyKDL import *
+# # Embedding
+# from Embedding import Embedding
+# import Embedding.Node as Node
+# import Embedding.Design as Design
+# # PyKDL:
+# import roslib
+# roslib.load_manifest('orocos_kdl')
+# from PyKDL import *
 # Other:
 import copy
 import matplotlib.pyplot as plt
@@ -30,7 +30,7 @@ nodes=nx.draw_networkx_nodes(G, pos)
 edges=nx.draw_networkx_edges(G, pos)
 labels=nx.draw_networkx_labels(G, pos)
 edgelabels=nx.draw_networkx_edge_labels(G, pos)
-#plt.show()
+plt.show()
 
 #####
 D1 = T.translateDesign(fileName, rootname, 'FrontWheel')
@@ -42,5 +42,5 @@ length_scaling = 1
 params = {'types_subsumed': types_subsumed,
                'length_scaling': length_scaling}
 # Embedding:
-E = Embedding.Embedding(D1, D2, params)
-print E.check_kinematic_embedding_dynamic()
+#E = Embedding.Embedding(D1, D2, params)
+#print E.check_kinematic_embedding_dynamic()

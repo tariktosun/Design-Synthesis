@@ -12,8 +12,8 @@ import networkx as nx # graph library
 import xml.etree.ElementTree as ET # xml parsing
 
 # Embedding stuff:
-from Embedding import SmoresDesign
-from Embedding import SmoresModule
+#from Embedding import SmoresDesign
+#from Embedding import SmoresModule
 
 # other:
 import pdb
