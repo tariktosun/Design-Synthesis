@@ -3,6 +3,11 @@ Created on Jan 14, 2014
 
 @author: tariktosun
 '''
+import os, sys
+file_dir = os.path.dirname(__file__) # dir of this file
+src_dir = os.path.join(file_dir, '../src')
+sys.path.append(src_dir)
+#
 import unittest
 #import Embedding.Node as Node
 #import Embedding.Edge as Edge
