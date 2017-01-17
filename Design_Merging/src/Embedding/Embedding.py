@@ -9,6 +9,7 @@ from itertools import permutations
 import pandas
 #import sys
 import math
+import pdb
 
 class Embedding(object):
     '''
@@ -390,18 +391,23 @@ class Embedding(object):
         for node in subD.nodes:
             # all nodes must be present:
             if not nodemap.has_key(node):
+                pdb.set_trace()
                 return False
             # mapped nodes must subsume functionality:
             if not self.type_subsumes(nodemap[node].type, node.type):
+                pdb.set_trace()
                 return False
             # End effectors must map to end-effectors, and may have no children.
             if node.is_end_effector:
                 if not nodemap[node].is_end_effector:
+                    pdb.set_trace()
                     return False
                 if not nodemap[node].children == []:
+                    pdb.set_trace()
                     return False
             # check one-to-oneness:
             if nodemap[node] in used_nodes:
+                pdb.set_trace()
                 return False
             used_nodes.append(nodemap[node])
         return True
